@@ -1,0 +1,86 @@
+@import '../../../assets/css/font.css';
+/* Nav bar section */
+ul.navbar-toggle{
+    padding: 0px;
+    margin: 0px;
+    margin-right:15px;
+    border:none;
+    border-radius: 0px;
+}
+ul.navbar-toggle span{
+    color:#337ab7;
+    font-size:1em;
+    border:none;
+    padding: 15px;
+}
+ul.navbar-toggle li{
+    top:0px;
+    font-size: 16px;
+    margin: 2px;
+}
+
+/** Remove border and border shadow from nav-bar**/
+.navbar-default {
+    -webkit-box-shadow: none!important;
+    box-shadow: none!important;
+    border: none!important;
+}
+/* Override Bootstrap navbar links - blue instead of grey */
+.navbar-default {
+    background-color: transparent!important;
+    background-image: linear-gradient(to bottom, #fff 0, #fff 100%)!important;
+}
+
+.navbar-fixed-top {
+    position:absolute;
+    top:25px!important;
+}
+
+/* Parent Menus */
+nav.navbar ul.nav>li>a {
+    padding-left: 13px;
+    padding-right: 13px;
+    font-size: 20px;
+}
+
+.navbar-default .navbar-nav>li>a {
+    height: 52px!important;
+}
+
+/** Mobile Navbar Text Labels **/
+.navbar-default .navbar-nav>li>a>span.mobileNavbarLabel {
+    padding-left: 10px;
+}
+
+.navbar-default .navbar-nav>li:not(.disabled)>a>span.glyphicon {
+    top:0px;
+    color: #337ab7;
+}
+
+.navbar-default .navbar-nav>li:disabled>a>span.glyphicon {
+    top:0px;
+    color: #ddd;
+}
+
+nav.navbar ul.nav>li:not(.disabled) a:hover {
+    background-color: rgba(155, 155, 155, 0.25) !important;
+}
+
+nav.navbar ul.nav>li:not(.disabled) a:focus {
+    background-color: transparent !important;
+    color: #337ab7 !important;
+}
+
+nav.navbar ul.nav>li:not(.disabled) a:focus:hover {
+    background-color: rgba(155, 155, 155, 0.25) !important;
+    color: #2C527D !important;
+}
+
+nav.navbar ul.nav>li.selected {
+    background-color: rgba(155, 155, 155, 0.25);
+}
+
+nav.navbar ul.nav>li.outlined {
+    background-color: rgba(155, 155, 155, 0.25);
+}
+/*end Nav bar section */
