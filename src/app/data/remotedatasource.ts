@@ -121,7 +121,7 @@ export class RemoteDataSource extends geotoolkit.data.DataSource {
     private fetchDataSet(type, source, args) {
         // args = [{'start':..., 'end': ..., 'scale': ...]
         const visibleLimits = this.well.getVisibleDepthLimits();
-        // Check it track is in the visible area
+        // Check if a track is in the visible area
         if (visibleLimits.getSize() > 0) {
             const start = this.widget.convertModelDepthToTrackDepth(this.well, args.start);
             const end = this.widget.convertModelDepthToTrackDepth(this.well, args.end);

@@ -22,13 +22,7 @@ global.DOMParser = DOMParser;
 global.window.DOMParser = DOMParser;
 
 require(requirejsConfig['paths']['geotoolkit.data'] + '.js');
-require(requirejsConfig['paths']['geotoolkit.controls'] + '.js');
-require(requirejsConfig['paths']['geotoolkit.pdf'] + '.js');
-require(requirejsConfig['paths']['geotoolkit.svg'] + '.js');
-require(requirejsConfig['paths']['geotoolkit.widgets'] + '.js');
-require(requirejsConfig['paths']['geotoolkit.report'] + '.js');
 require(requirejsConfig['paths']['geotoolkit.welllog'] + '.js');
-require(requirejsConfig['paths']['geotoolkit.welllog.widgets'] + '.js');
 require(requirejsConfig['paths']['geotoolkit.welllog.las'] + '.js');
 
 global.geotoolkit = window.geotoolkit;
