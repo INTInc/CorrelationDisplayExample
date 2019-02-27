@@ -61,7 +61,7 @@ export class CorrelationComponent implements OnInit, AfterViewInit {
     let index = 0;
     this.welllog.suspendUpdate();
     wellsArray.forEach(async (well) => {
-      const dataSource = await RemoteDataSource.create(well['id'], this.curveService);
+      const dataSource = await RemoteDataSource.create(well, this.curveService);
       this.welllog.addWell(new geotoolkit.util.Range(+well['minDepth'] - minDepth, +well['maxDepth'] - minDepth),
         new geotoolkit.util.Range(+well['minDepth'], +well['maxDepth']), wellTemplate, dataSource);
         if (++index === wellsArray.length) {

@@ -1,12 +1,26 @@
 const fs = require('fs');
 module.exports = function() {
     const minDistance = 1; // in pixels
-    const RepeatWells = 5;
+    const RepeatWells = 100;
     const lasPath = './server/las/';
     const __lasMap = new Map();
     const __wells = new Map();
     let __fileId = 0;
     let __created = false;
+    const getCurvesFromTable = function(table) {
+        const curves = [];
+        for (let i=0; i < table.getNumberOfColumns(); ++i) {
+            const column = table.getColumn(i);
+            curves.push({
+                'name': column.getName(),
+                'type': column.getType(),
+                'unit': column.getUnit().getSymbol(),
+                'min': column.getMin(),
+                'max': column.getMax(),
+            });
+        }
+        return curves;
+    };
     const querySectionByName = function(sections, name) {
         for (let i = 0; i < sections.length; ++i) {
             if (sections[i].getName().toLowerCase().indexOf(name.toLowerCase()) >= 0) {
@@ -188,20 +202,11 @@ module.exports = function() {
     DataStorage.prototype.getCurvesList = async function(wellId) {
         const wells = await updateWells();
         return new Promise((resolve) => {
-            const curves = [];
+            let curves;
             const well = wells.get(+wellId);
             if (well) {
                 const table = well['data'];
-                for (let i=0; i < table.getNumberOfColumns(); ++i) {
-                    const column = table.getColumn(i);
-                    curves.push({
-                        'name': column.getName(),
-                        'type': column.getType(),
-                        'unit': column.getUnit().getSymbol(),
-                        'min': column.getMin(),
-                        'max': column.getMax(),
-                    });
-                }
+                curves = getCurvesFromTable(table);
             }
             resolve(curves);
         });
@@ -270,6 +275,7 @@ module.exports = function() {
             'id': value['id'],
             'minDepth': value['data'].getMetaData()['range'].getLow(),
             'maxDepth': value['data'].getMetaData()['range'].getHigh(),
+            'curves': getCurvesFromTable(value['data']),
         }));
         return output;
     };
