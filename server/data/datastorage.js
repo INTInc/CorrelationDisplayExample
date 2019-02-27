@@ -1,7 +1,7 @@
 const fs = require('fs');
 module.exports = function() {
     const minDistance = 1; // in pixels
-    const RepeatWells = 100;
+    const RepeatWells = 10;
     const lasPath = './server/las/';
     const __lasMap = new Map();
     const __wells = new Map();
