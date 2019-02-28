@@ -25,7 +25,7 @@ class CurveBinding extends geotoolkit.data.DataBinding {
             return;
         }
         const id = curve.getName();
-        const curves = this.dataTable.getMetaData()['curveLimits'];
+        const curves = this.dataTable.getMetaData()['curvesInfo'];
         const index = this.dataTable.indexOfColumn(this.dataTable.getColumnByName(id));
         const column = getCurveInfo(curves, id);
         if (index === -1 && column) {
@@ -35,13 +35,11 @@ class CurveBinding extends geotoolkit.data.DataBinding {
         } else {
             return;
         }
-        const min = column['min'];
-        const max = column['max'];
         const source = data.getCurveSource(id);
         if (source != null) {
             curve.setData(source, true, true);
         }
-        curve.setNormalizationLimits(min, max);
+        curve.setNormalizationLimits(column['min'], column['max']);
     }
     public unbind(curve, data) {
         // TODO: We are not allowed to set data = null
@@ -61,11 +59,10 @@ export class RemoteDataSource extends geotoolkit.data.DataSource {
         super();
         this.onWidgetDataUpdated = this.fetchDataSet.bind(this);
         this.onDataSetDataFetching = this.dataSetDataFetching.bind(this);
+        this.init();
     }
-    static async create(wellInfo: any, curveService: CurveService) {
-        const datasource = new RemoteDataSource(wellInfo, curveService);
-        await datasource.init();
-        return datasource;
+    static create(wellInfo: any, curveService: CurveService) {
+        return new RemoteDataSource(wellInfo, curveService);
     }
     public connect(well: geotoolkit.welllog.multiwell.IWellTrack,
             widget: geotoolkit.welllog.multiwell.MultiWellWidget) {
@@ -110,29 +107,25 @@ export class RemoteDataSource extends geotoolkit.data.DataSource {
             })) :
             null;
     }
-    private async init() {
+    private init() {
         const curvesInfo = this.wellInfo['curves'];
-        const depthColumnMetaData = getCurveInfo(curvesInfo, depthColumnName);
-        if (!depthColumnMetaData) {
+        const depthColumn = getCurveInfo(curvesInfo, depthColumnName);
+        if (!depthColumn) {
             throw new Error('Wrong depth column meta data');
-        }
-        const range = depthColumnMetaData;
-        if (!range) {
-            throw new Error('Wrong depth range');
         }
         // Create a data table to keep some data in memory
         this.logData = new geotoolkit.data.DataTable({
-            cols: [getCurveInfo(curvesInfo, depthColumnName)],
+            cols: [depthColumn],
             colsdata: [],
             meta: {
-                'curveLimits': curvesInfo
+                'curvesInfo': curvesInfo
             }
         });
         // Create dataset, which keeps a dataset range and manage data to be loaded
         this.dataSet = new geotoolkit.data.DataSet();
         this.dataSet.on(geotoolkit.data.Events.DataFetching, this.onDataSetDataFetching);
         // Add log data to data set
-        this.dataSet.addTable(this.logData, new geotoolkit.util.Range( +range['min'], +range['max']));
+        this.dataSet.addTable(this.logData, new geotoolkit.util.Range( +depthColumn['min'], +depthColumn['max']));
     }
     private fetchDataSet(type, source, args) {
         // args = [{'start':..., 'end': ..., 'scale': ...]

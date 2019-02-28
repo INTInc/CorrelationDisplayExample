@@ -1,7 +1,7 @@
 const fs = require('fs');
 module.exports = function() {
     const minDistance = 1; // in pixels
-    const RepeatWells = 10;
+    const RepeatWells = 10; // by 3 wells
     const lasPath = './server/las/';
     const __lasMap = new Map();
     const __wells = new Map();
@@ -266,6 +266,17 @@ module.exports = function() {
     };
     DataStorage.prototype.getData = function(wellId, curves, range, scale, usedecimation) {
         return this.getLogData(wellId, curves, range, scale, usedecimation);
+    };
+    DataStorage.prototype.getDataForWells = async function(wells, usedecimation) {
+        const data = [];
+        for (const element of wells) {
+            const wellData = await this.getLogData(element['wellId'], element['curves'], element['range'], element['scale'], usedecimation);
+            data.push({
+                'wellId': element['wellId'],
+                'data': wellData,
+            });
+        }
+        return data;
     };
     DataStorage.prototype.getWells = async function() {
         const wells = await updateWells();

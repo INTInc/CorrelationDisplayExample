@@ -8,12 +8,13 @@ const DataStorage = require('./data/datastorage')();
 const getTemplate = require('./src/gettemplate');
 const getWellsList = require('./src/getwellslist');
 const getTopsList = require('./src/gettopslist');
-
+const getCurvesWellsData = require('./src/getcurveswellsdata');
 module.exports = function(app) {
     // Wells
     const dataStorage = DataStorage.create();
     router.get('/v1/wells', getWellsList(dataStorage));
     // Curves
+    router.post('/v1/curves/data', getCurvesWellsData(dataStorage));
     router.post('/v1/wells/:wellId/curves/data', getCurvesData(dataStorage));
     router.get('/v1/wells/:wellId/curves', getCurvesList(dataStorage));
     router.get('/v1/wells/:wellId/curves/:id', getCurvesMetaData(dataStorage));
