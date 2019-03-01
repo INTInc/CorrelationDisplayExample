@@ -73,10 +73,10 @@ export class MultiWellComponent implements AfterViewInit {
    * Add well
    * @param {geotoolkit.util.Range} position position inside the display
    * @param {geotoolkit.util.Range} depths depths
-   * @param {object} template template
+   * @param {object|string} template template
    * @param {RemoteDataSource} data data
    */
-  public addWell(position: geotoolkit.util.Range, depths: geotoolkit.util.Range, template?: object, data?: RemoteDataSource) {
+  public addWell(position: geotoolkit.util.Range, depths: geotoolkit.util.Range, template?: object|string, data?: RemoteDataSource) {
     let correlation;
     if (this.widget.getTracksCount() > 0) {
       correlation = this.widget.createTrack(geotoolkit.welllog.multiwell.TrackType.CorrelationTrack, {
@@ -99,7 +99,29 @@ export class MultiWellComponent implements AfterViewInit {
       data.connect(well, this.widget);
     }
     this.widget.addTrack(well);
-    return { 'well': well, 'correlation': correlation };
+  }
+  /**
+   * Add wells
+   * @param {any[]} wells wells
+   */
+  public addWells(wells: any) {
+    const tracks = [];
+    for (let i = 0; i < wells.length; ++i) {
+      if (this.widget.getTracksCount() + i > 0) {
+        tracks.push(this.widget.createTrack(geotoolkit.welllog.multiwell.TrackType.CorrelationTrack, {
+          'width': MultiWellComponent.CorrelationTrackWidth
+        }));
+      }
+      const well = this.createWell(wells[i]['position'],
+        wells[i]['depths'],
+        wells[i]['template']);
+      if (wells[i]['data']) {
+        wells[i]['data'].connect(well, this.widget);
+      }
+      tracks.push(well);
+    }
+    // workaround for TypeScript. it will be replaced by a new version of toolkit
+    this.widget.addTrack((tracks as unknown) as geotoolkit.welllog.multiwell.IWellTrack);
   }
   /**
    * Suspend widget update
@@ -270,6 +292,22 @@ export class MultiWellComponent implements AfterViewInit {
       }
     }
   }
+  private createWell(position, depths, template) {
+    const well = this.widget.createTrack(geotoolkit.welllog.multiwell.TrackType.WellTrack, {
+      'width': 0,
+      'range': position,
+      'welllog': {
+        'range':  depths
+      },
+      'title': 'Well ' + (this.wellCounter++)
+    }) as any; //geotoolkit.welllog.multiwell.IWellTrack;
+    if (template) {
+      well.suspendUpdate();
+      well.loadTemplate(JSON.stringify(template));
+      well.resumeUpdate();
+    }
+    return well;
+  }
   private init() {
     this.configureHeaders();
     this.initPlot();
@@ -366,7 +404,7 @@ export class MultiWellComponent implements AfterViewInit {
         '   visible: false;',
         '}',
         '.geotoolkit.welllog.LogTrack {',
-        '   border-visible: true;',
+        '   border-visible: false;',
         '}',
         '.geotoolkit.welllog.LogMarker {',
         '   visiblenamelabel: false;',

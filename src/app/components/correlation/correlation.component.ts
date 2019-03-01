@@ -58,18 +58,22 @@ export class CorrelationComponent implements OnInit, AfterViewInit {
     wellsArray.forEach(async (well) => {
       minDepth = Math.min(+well['minDepth'], minDepth);
     });
-    let index = 0;
     this.welllog.suspendUpdate();
-    wellsArray.forEach(async (well) => {
+    const wellsToAdd = [];
+    for (let i = 0; i < wellsArray.length; ++i) {
+      let well = wellsArray[i];
       const dataSource = RemoteDataSource.create(well, this.curveService);
-      this.welllog.addWell(new geotoolkit.util.Range(+well['minDepth'] - minDepth, +well['maxDepth'] - minDepth),
-        new geotoolkit.util.Range(+well['minDepth'], +well['maxDepth']), wellTemplate, dataSource);
-        if (++index === wellsArray.length) {
-          const tops = await this.topsService.getTopsList();
-          this.addCorrelation(tops.json());
-          this.welllog.resumeUpdate();
-        }
-    });
+      wellsToAdd.push({
+        'position': new geotoolkit.util.Range(+well['minDepth'] - minDepth, +well['maxDepth'] - minDepth),
+        'depths': new geotoolkit.util.Range(+well['minDepth'], +well['maxDepth']),
+        'template': wellTemplate,
+        'data': dataSource
+      });
+    }
+    this.welllog.addWells(wellsToAdd);
+    const tops = await this.topsService.getTopsList();
+    this.addCorrelation(tops.json());
+    this.welllog.resumeUpdate();
   }
   private addCorrelation(tops) {
     const topsItems = tops['tops'];
