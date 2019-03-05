@@ -37,7 +37,7 @@ class CurveBinding extends geotoolkit.data.DataBinding {
         }
         const source = data.getCurveSource(id);
         if (source != null) {
-            curve.setData(source, true, true);
+            curve.setData(source, false, true);
         }
         curve.setNormalizationLimits(column['min'], column['max']);
     }
