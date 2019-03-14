@@ -1,5 +1,6 @@
-import { Component, AfterViewInit, ViewChild, ElementRef, HostListener, OnInit } from '@angular/core';
-import { RemoteDataSource } from '../../data/index';
+import { Component, AfterViewInit, ViewChild, ElementRef, HostListener } from '@angular/core';
+import { IWellDataSource, CurveBinding } from '../../data/index';
+
 @Component({
   selector: 'app-multiwell-component',
   templateUrl: './multiwell.component.html',
@@ -14,6 +15,7 @@ export class MultiWellComponent implements AfterViewInit {
   private wellCounter = 0;
   private panning = false;
   private horizontalScale = false;
+  private curveBinding: CurveBinding = null;
   constructor() {
 
   }
@@ -74,9 +76,9 @@ export class MultiWellComponent implements AfterViewInit {
    * @param {geotoolkit.util.Range} position position inside the display
    * @param {geotoolkit.util.Range} depths depths
    * @param {object|string} template template
-   * @param {RemoteDataSource} data data
+   * @param {IWellDataSource} data data
    */
-  public addWell(position: geotoolkit.util.Range, depths: geotoolkit.util.Range, template?: object|string, data?: RemoteDataSource) {
+  public addWell(position: geotoolkit.util.Range, depths: geotoolkit.util.Range, template?: object | string, data?: IWellDataSource) {
     let correlation;
     if (this.widget.getTracksCount() > 0) {
       correlation = this.widget.createTrack(geotoolkit.welllog.multiwell.TrackType.CorrelationTrack, {
@@ -95,6 +97,9 @@ export class MultiWellComponent implements AfterViewInit {
     if (template) {
       well.loadTemplate(JSON.stringify(template));
     }
+    // Add data binding
+    const binding = well.getDataBinding() as geotoolkit.data.DataBindingRegistry;
+    binding.add(this.curveBinding);
     if (data) {
       data.connect(well, this.widget);
     }
@@ -297,7 +302,7 @@ export class MultiWellComponent implements AfterViewInit {
       'width': 0,
       'range': position,
       'welllog': {
-        'range':  depths
+        'range': depths
       },
       'title': 'Well ' + (this.wellCounter++)
     }) as any; //geotoolkit.welllog.multiwell.IWellTrack;
@@ -306,6 +311,9 @@ export class MultiWellComponent implements AfterViewInit {
       well.loadTemplate(JSON.stringify(template));
       well.resumeUpdate();
     }
+    // Add data binding
+    const binding = well.getDataBinding() as geotoolkit.data.DataBindingRegistry;
+    binding.add(this.curveBinding);
     return well;
   }
   private init() {
@@ -326,6 +334,7 @@ export class MultiWellComponent implements AfterViewInit {
     this.widget = widget;
   }
   private createWidget(): geotoolkit.welllog.multiwell.MultiWellWidget {
+    this.curveBinding = new CurveBinding();
     const widget = new geotoolkit.welllog.multiwell.MultiWellWidget({
       'offscreentrackpanning': 0.08,
       'header': {

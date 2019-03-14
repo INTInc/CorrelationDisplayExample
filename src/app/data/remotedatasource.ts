@@ -1,4 +1,5 @@
 import { CurveService } from '../services/index';
+import { IWellDataSource } from './welldatasource';
 
 const depthColumnName = 'DEPTH';
 function getCurveInfo(columns, name: string) {
@@ -9,45 +10,7 @@ function getCurveInfo(columns, name: string) {
     }
     return null;
 }
-class CurveBinding extends geotoolkit.data.DataBinding {
-    private dataTable: geotoolkit.data.DataTable;
-    private dataSet: geotoolkit.data.DataSet;
-    constructor(dataTable: geotoolkit.data.DataTable, dataSet: geotoolkit.data.DataSet) {
-        super();
-        this.dataTable = dataTable;
-        this.dataSet = dataSet;
-    }
-    public accept(node) {
-        return node instanceof geotoolkit.welllog.LogCurve;
-    }
-    public bind(curve, data) {
-        if (data == null) {
-            return;
-        }
-        const id = curve.getName();
-        const curves = this.dataTable.getMetaData()['curvesInfo'];
-        const index = this.dataTable.indexOfColumn(this.dataTable.getColumnByName(id));
-        const column = getCurveInfo(curves, id);
-        if (index === -1 && column) {
-            this.dataTable.addColumn(column);
-            // Invalidate table (At the current moment table cannot be invalidated by column)
-            this.dataSet.invalidateRange();
-        } else {
-            return;
-        }
-        const source = data.getCurveSource(id);
-        if (source != null) {
-            curve.setData(source, false, true);
-        }
-        curve.setNormalizationLimits(column['min'], column['max']);
-    }
-    public unbind(curve, data) {
-        // TODO: We are not allowed to set data = null
-    }
-}
-geotoolkit.obfuscate(CurveBinding, geotoolkit.data.DataBinding);
-
-export class RemoteDataSource extends geotoolkit.data.DataSource {
+export class RemoteDataSource extends geotoolkit.data.DataSource implements IWellDataSource {
     private curveBinding: geotoolkit.data.DataBinding;
     private dataSet: geotoolkit.data.DataSet;
     private logData: geotoolkit.data.DataTable;
@@ -68,10 +31,6 @@ export class RemoteDataSource extends geotoolkit.data.DataSource {
             widget: geotoolkit.welllog.multiwell.MultiWellWidget) {
         this.well = well;
         this.widget = widget;
-        const binding = well.getDataBinding() as geotoolkit.data.DataBindingRegistry;
-        const dataTable = this.dataSet.getTable(0);
-        this.curveBinding = this.curveBinding || new CurveBinding(dataTable, this.dataSet);
-        binding.add(this.curveBinding);
         widget.on(geotoolkit.welllog.multiwell.MultiWellWidget.Events.DataUpdating,
                 this.onWidgetDataUpdated);
         well.setData(this);
@@ -85,19 +44,23 @@ export class RemoteDataSource extends geotoolkit.data.DataSource {
         well.setData(null);
     }
     /**
-     * Add curve to update
-     * @param {string} curveId curve's id
-     */
-    public async addCurve(curveId) {
-        const curveMetaData = await this.curveService.getCurveMetaData(this.wellInfo['id'], curveId);
-        this.logData.addColumn(curveMetaData);
-    }
-    /**
      * Return curve data source
-     * @param id
+     * @param {string|number} id curve id
      * @returns {geotoolkit.welllog.data.LogCurveDataSource}
      */
-    public getCurveSource(id) {
+    public getCurveSource(id: string): geotoolkit.welllog.data.LogCurveDataSource {
+        const curvesInfo = this.wellInfo['curves'];
+        const dataTable = this.getDataTable();
+        const index =  dataTable.indexOfColumn(dataTable.getColumnByName(id));
+        const column = getCurveInfo(curvesInfo, id);
+        if (!column) {
+            return null;
+        }
+        if (index === -1) {
+            dataTable.addColumn(column);
+            // Invalidate table (At the current moment table cannot be invalidated by column)
+            this.dataSet.invalidateRange();
+        }
         const depths = this.dataSet.getIndexColumn(0);
         const values = this.dataSet.getTable(0).getColumnByName(id);
         return values !== null ? (new geotoolkit.welllog.data.LogCurveDataSource({
@@ -106,6 +69,19 @@ export class RemoteDataSource extends geotoolkit.data.DataSource {
                 'name': id
             })) :
             null;
+    }
+    /**
+     * Returns curve value limits
+     * @param {string} id curve id
+     * @returns {?geotoolkit.util.Range} limits
+     */
+    public getCurveValueLimits(id: string): geotoolkit.util.Range {
+        const curvesInfo = this.wellInfo['curves'];
+        const column = getCurveInfo(curvesInfo, id);
+        if (!column) {
+            return null;
+        }
+        return new geotoolkit.util.Range(column['min'], column['max']);
     }
     private init() {
         const curvesInfo = this.wellInfo['curves'];
@@ -116,10 +92,7 @@ export class RemoteDataSource extends geotoolkit.data.DataSource {
         // Create a data table to keep some data in memory
         this.logData = new geotoolkit.data.DataTable({
             cols: [depthColumn],
-            colsdata: [],
-            meta: {
-                'curvesInfo': curvesInfo
-            }
+            colsdata: []
         });
         // Create dataset, which keeps a dataset range and manage data to be loaded
         this.dataSet = new geotoolkit.data.DataSet();
@@ -132,8 +105,8 @@ export class RemoteDataSource extends geotoolkit.data.DataSource {
         const visibleLimits = this.well.getVisibleDepthLimits();
         // Check if a track is in the visible area
         if (visibleLimits.getSize() > 0) {
-            const start = this.widget.convertModelDepthToTrackDepth(this.well, args.start);
-            const end = this.widget.convertModelDepthToTrackDepth(this.well, args.end);
+            const start = Math.floor(this.widget.convertModelDepthToTrackDepth(this.well, args.start));
+            const end = Math.ceil(this.widget.convertModelDepthToTrackDepth(this.well, args.end));
             const limits = new geotoolkit.util.Range(start, end);
             const scale = this.well.getDepthScale(null, 'px');
             this.dataSet.fetch(limits, scale);
@@ -165,6 +138,9 @@ export class RemoteDataSource extends geotoolkit.data.DataSource {
             columns.push(this.logData.getColumn(i).getName());
         }
         return this.curveService.getCurvesData(this.wellInfo['id'], columns, range, scale, useDecimation);
+    }
+    private getDataTable(): geotoolkit.data.DataTable {
+        return this.dataSet.getTable(0);
     }
 }
 geotoolkit.obfuscate(RemoteDataSource, geotoolkit.data.DataSource);
