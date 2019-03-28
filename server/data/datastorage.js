@@ -106,7 +106,7 @@ module.exports = function() {
     const updateWellsMap = async function() {
         return new Promise(async (resolve) => {
             fs.readdir(lasPath, async (err, files) => {
-                const objects = files.map(function(file) {
+                const objects = files.filter((file) => file.indexOf('.las') !== -1 || file.indexOf('.LAS') !== -1).map(function(file) {
                     return {
                         'fileName': file,
                         'name': file,
@@ -205,8 +205,7 @@ module.exports = function() {
             let curves;
             const well = wells.get(+wellId);
             if (well) {
-                const table = well['data'];
-                curves = getCurvesFromTable(table);
+                curves = getCurvesFromTable(well['data']);
             }
             resolve(curves);
         });

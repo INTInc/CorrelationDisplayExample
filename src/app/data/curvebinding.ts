@@ -8,7 +8,7 @@ export class CurveBinding extends geotoolkit.data.DataBinding {
         return node instanceof geotoolkit.welllog.LogCurve;
     }
     public bind(curve, data: IWellDataSource) {
-        if (data == null) {
+        if (data == null || !this.accept(curve)) {
             return;
         }
         const id = curve.getName();

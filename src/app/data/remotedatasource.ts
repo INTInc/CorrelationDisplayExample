@@ -4,11 +4,14 @@ import { IWellDataSource } from './welldatasource';
 const depthColumnName = 'DEPTH';
 function getCurveInfo(columns, name: string) {
     for (let i = 0; i < columns.length; ++i) {
-        if (columns[i]['name'] === name) {
+        if (columns[i]['name'].indexOf(name) !== -1) {
             return columns[i];
         }
     }
     return null;
+}
+function getFirstCurveInfo(columns) {
+    return columns.length > 0 ? columns[0] : null;
 }
 export class RemoteDataSource extends geotoolkit.data.DataSource implements IWellDataSource {
     private curveBinding: geotoolkit.data.DataBinding;
@@ -85,7 +88,7 @@ export class RemoteDataSource extends geotoolkit.data.DataSource implements IWel
     }
     private init() {
         const curvesInfo = this.wellInfo['curves'];
-        const depthColumn = getCurveInfo(curvesInfo, depthColumnName);
+        const depthColumn = getCurveInfo(curvesInfo, depthColumnName) || getFirstCurveInfo(curvesInfo);
         if (!depthColumn) {
             throw new Error('Wrong depth column meta data');
         }

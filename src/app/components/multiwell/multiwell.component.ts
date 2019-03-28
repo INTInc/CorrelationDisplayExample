@@ -98,8 +98,7 @@ export class MultiWellComponent implements AfterViewInit {
       well.loadTemplate(JSON.stringify(template));
     }
     // Add data binding
-    const binding = well.getDataBinding() as geotoolkit.data.DataBindingRegistry;
-    binding.add(this.curveBinding);
+    well.setDataBinding(this.curveBinding);
     if (data) {
       data.connect(well, this.widget);
     }
@@ -312,8 +311,7 @@ export class MultiWellComponent implements AfterViewInit {
       well.resumeUpdate();
     }
     // Add data binding
-    const binding = well.getDataBinding() as geotoolkit.data.DataBindingRegistry;
-    binding.add(this.curveBinding);
+    well.setDataBinding(this.curveBinding);
     return well;
   }
   private init() {
@@ -339,7 +337,10 @@ export class MultiWellComponent implements AfterViewInit {
       'offscreentrackpanning': 0.08,
       'header': {
         'viewcache': true
-      }
+      },
+      'footer': {
+        'visible': 'none'
+        }
     });
     this.initRubberBandTool(widget);
     this.setLevelOfDetails(widget);
