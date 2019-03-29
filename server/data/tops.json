@@ -17,29 +17,6 @@
         }
     ],
     "lithology": [
-        {
-            "start": 4700,
-            "end": 4800,
-            "color": "#fbc02d",
-            "name": ""
-        },
-        {
-            "start": 4800,
-            "end": 4900,
-            "color": "#ff7043",
-            "name": ""
-        },
-        {
-            "start": 4900,
-            "end": 5000,
-            "color": "#dcedc8",
-            "name": ""
-        },
-        {
-            "start": 5000,
-            "end": 5200,
-            "color": "#fbc02d",
-            "name": ""
-        }
+        
     ]
 }

@@ -12,7 +12,7 @@ export class MultiWellComponent implements AfterViewInit {
   @ViewChild('parent') parent: ElementRef;
   private plot: geotoolkit.plot.Plot;
   private widget: geotoolkit.welllog.multiwell.MultiWellWidget;
-  private wellCounter = 0;
+  private wellCounter = 1;
   private panning = false;
   private horizontalScale = false;
   private curveBinding: CurveBinding = null;
