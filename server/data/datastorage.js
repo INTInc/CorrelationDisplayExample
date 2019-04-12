@@ -1,7 +1,7 @@
 const fs = require('fs');
 module.exports = function() {
-    const minDistance = 1; // in pixels
-    const RepeatWells = 10; // by 3 wells
+    const minDistance = 3; // in pixels
+    const RepeatWells = 10; // by 334 wells
     const lasPath = './server/las/';
     const __lasMap = new Map();
     const __wells = new Map();
@@ -228,9 +228,9 @@ module.exports = function() {
         const span = queryRange.getSize() / 20;
         const startTime = Math.max(queryRange.getLow() - span, wholeRange.getLow());
         const endTime = Math.min(queryRange.getHigh() + span, wholeRange.getHigh());
-        let startIndex = Math.floor((startTime - wholeRange.getLow()) / originalStep);
+        let startIndex = Math.floor((startTime - wholeRange.getLow()) / originalStep) - 1;
         if (startIndex < 0) startIndex = 0;
-        let endIndex = Math.ceil((endTime - wholeRange.getLow()) / originalStep);
+        let endIndex = Math.ceil((endTime - wholeRange.getLow()) / originalStep) + 1;
         // distance between samples in device
         let step = Math.ceil((minDistance / scale) / originalStep);
         if (step <= 0) {
@@ -241,7 +241,7 @@ module.exports = function() {
         }
         startIndex = step * Math.floor(startIndex / step);
         endIndex = step * Math.ceil(endIndex / step);
-        if (endIndex >= numberOfSamples) {
+        if ((endIndex + step) >= numberOfSamples - 1) {
             endIndex = numberOfSamples - 1;
         }
         const cells = []; let i; let j; let k;
@@ -258,6 +258,13 @@ module.exports = function() {
                 cells[j][k] = curvesData[j][i];
             }
             k++;
+        }
+        if (endIndex === numberOfSamples - 1) {
+            for (j = 0; j < curvesCount; ++j) {
+                if (cells[j][cells[j].length-1] !== curvesData[j][endIndex]) {
+                    cells[j][k] = curvesData[j][endIndex];
+                }
+            }
         }
         return new Promise((resolve) => {
             resolve(cells);

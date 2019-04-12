@@ -131,12 +131,14 @@ export class MultiWellComponent implements AfterViewInit {
    * Suspend widget update
    */
   public suspendUpdate() {
+    geotoolkit.scene.Node.enableSceneGraphNotification(false);
     this.widget.suspendUpdate();
   }
   /**
    * Resume widget update
    */
   public resumeUpdate() {
+    geotoolkit.scene.Node.enableSceneGraphNotification(true);
     this.widget.resumeUpdate();
   }
   /**
@@ -151,6 +153,7 @@ export class MultiWellComponent implements AfterViewInit {
     if (!depthScale) {
       depthScale = 100;
     }
+    this.suspendUpdate();
     this.widget.scale(1.0 / scaleX, 1.0 / scaleY);
     let depthRange = null;
     this.widget.getTrackContainer().getChildren().forEach(function (element) {
@@ -162,6 +165,7 @@ export class MultiWellComponent implements AfterViewInit {
       element.setDepthScale(depthScale);
       depthRange = element.getDepthLimits();
     });
+    this.resumeUpdate();
     if (depthRange) {
       this.widget.alignToDepth((depthRange.getHigh() + depthRange.getLow()) / 2, 'center');
     }

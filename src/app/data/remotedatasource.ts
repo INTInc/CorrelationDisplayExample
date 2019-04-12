@@ -123,7 +123,9 @@ export class RemoteDataSource extends geotoolkit.data.DataSource implements IWel
      */
     private async dataSetDataFetching(type, source, args) {
         // request a data range from server
-        const cells = await this.getRangedData(args['limits'], args['scale'], this.dataSet.isDecimationEnabled());
+        const limits = args['limits'];
+        const scale = args['scale'];
+        const cells = await this.getRangedData(limits, scale, this.dataSet.isDecimationEnabled());
         // call callback and pass received data
         args['callback'](null, [cells]);
     }
