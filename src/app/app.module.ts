@@ -6,6 +6,8 @@ import { AppComponent } from './app.component';
 // MultiWell Component and Correlation Component
 import { MultiWellComponent } from './components/index';
 import { CorrelationComponent } from './components/index';
+// Spinner
+import { SpinnerComponent } from './components/index';
 
 // Application config
 import { AppConfig } from './app.config';
@@ -25,7 +27,8 @@ export function AppConfigFactory() {
   declarations: [
     AppComponent,
     MultiWellComponent,
-    CorrelationComponent
+    CorrelationComponent,
+    SpinnerComponent
   ],
   imports: [
     BrowserModule,

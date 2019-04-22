@@ -2,6 +2,7 @@ import { Component, AfterViewInit, ViewChild, ElementRef, HostListener, OnInit }
 import { TemplateService, CurveService, WellService, TopsService } from '../../services/index';
 import { RemoteDataSource } from '../../data/index';
 import { MultiWellComponent } from '../multiwell/multiwell.component';
+import { SpinnerComponent } from '../spinner/spinner.component';
 @Component({
   selector: 'app-correlation-component',
   templateUrl: './correlation.component.html',
@@ -9,6 +10,7 @@ import { MultiWellComponent } from '../multiwell/multiwell.component';
 })
 export class CorrelationComponent implements OnInit, AfterViewInit {
   @ViewChild(MultiWellComponent) welllog: MultiWellComponent;
+  @ViewChild(SpinnerComponent) spinner: SpinnerComponent;
   constructor(private templateService: TemplateService, private curveService: CurveService,
     private wellService: WellService, private topsService: TopsService) {
 
@@ -49,6 +51,7 @@ export class CorrelationComponent implements OnInit, AfterViewInit {
     this.welllog.scaleWell(scale);
   }
   private async init() {
+    this.spinner.show();
     const wellTemplate = await this.templateService.getTemplate('template1.json');
     const wells = await this.wellService.getWellsList();
     const wellsArray = wells.json()['data'];
@@ -75,6 +78,7 @@ export class CorrelationComponent implements OnInit, AfterViewInit {
     const tops = await this.topsService.getTopsList();
     this.addCorrelation(tops.json());
     this.welllog.resumeUpdate();
+    this.spinner.hide();
   }
   private addCorrelation(tops) {
     const topsItems = tops['tops'];
