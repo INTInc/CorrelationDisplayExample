@@ -32,6 +32,24 @@ export class CorrelationComponent implements OnInit, AfterViewInit {
   public isSingleWellPanning(): boolean {
     return this.welllog.isSingleWellPanning();
   }
+  public toggleTopsEditingMode(event) {
+      this.welllog.setTopsEditingMode(!this.welllog.isTopsEditingMode());
+  }
+  public isTopsEditingMode(): boolean {
+      return this.welllog.isTopsEditingMode();
+  }
+  public toggleAddTopsMode(event) {
+        this.welllog.setAddTopsMode(!this.welllog.isAddTopsMode());
+  }
+  public isAddTopsMode(): boolean {
+      return this.welllog.isAddTopsMode();
+  }
+  public toggleRemoveTopsMode(event) {
+        this.welllog.setRemoveTopsMode(!this.welllog.isRemoveTopsMode());
+  }
+  public isRemoveTopsMode(): boolean {
+      return this.welllog.isRemoveTopsMode();
+  }
   public doRubberBandZoom(event) {
     this.welllog.activateRubberBand();
   }
@@ -63,7 +81,7 @@ export class CorrelationComponent implements OnInit, AfterViewInit {
     this.welllog.suspendUpdate();
     const wellsToAdd = [];
     for (let i = 0; i < wellsArray.length; ++i) {
-      let well = wellsArray[i];
+      const well = wellsArray[i];
       const dataSource = RemoteDataSource.create(well, this.curveService);
       wellsToAdd.push({
         'position': new geotoolkit.util.Range(+well['minDepth'] - minDepth, +well['maxDepth'] - minDepth),

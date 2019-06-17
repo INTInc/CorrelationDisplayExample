@@ -1,9 +1,9 @@
 div{
     -webkit-touch-callout: none;
     -o-user-select: none;
-    -moz-user-select: none;  
-    -moz-user-select: -moz-none;  
-    -webkit-user-select: none;  
+    -moz-user-select: none;
+    -moz-user-select: -moz-none;
+    -webkit-user-select: none;
     -ms-user-select: none;
     -khtml-user-select: none;
     user-select: none;
@@ -11,9 +11,9 @@ div{
   html,body {
     -webkit-touch-callout: none;
     -o-user-select: none;
-    -moz-user-select: none;  
-    -moz-user-select: -moz-none;  
-    -webkit-user-select: none;  
+    -moz-user-select: none;
+    -moz-user-select: -moz-none;
+    -webkit-user-select: none;
     -ms-user-select: none;
     -khtml-user-select: none;
     user-select: none;
@@ -99,4 +99,15 @@ div{
 .selected{
     background-color: #c0c0EE;
     white-space:nowrap;
+}
+#tooltip-container {
+    padding: 2px 12px 3px 7px;
+    margin-left: 5px;
+    background: #f6f6f6;
+    background: -webkit-gradient(linear, 0% 0%, 0% 100%, from(#f7f7f7),
+    to(#f8f8f8), color-stop(.5, #e3e3e3) );
+    border: solid 1px gray;
+    opacity: 1;
+    text-align: left;
+    color: #494949;
 }

@@ -1,6 +1,10 @@
 import { Component, AfterViewInit, ViewChild, ElementRef, HostListener } from '@angular/core';
 import { IWellDataSource, CurveBinding } from '../../data/index';
 
+let currentDepth;
+let listOfTracks = [];
+let colorOfInsertedMarker = geotoolkit.util.ColorUtil.getRandomColorRgb();
+let globalId = 0;
 @Component({
   selector: 'app-multiwell-component',
   templateUrl: './multiwell.component.html',
@@ -14,8 +18,27 @@ export class MultiWellComponent implements AfterViewInit {
   private widget: geotoolkit.welllog.multiwell.MultiWellWidget;
   private wellCounter = 1;
   private panning = false;
+  private topsEditingMode = false;
+  private addTopsMode = false;
+  private removeTopsMode = false;
   private horizontalScale = false;
   private curveBinding: CurveBinding = null;
+  private onPointerMove = function (event) {
+      const nodes = new geotoolkit.selection.Selector().select(this.widget.getRoot(), event.offsetX, event.offsetY, 2);
+      let well = null;
+      for (let i = 0; i < nodes.length; ++i) {
+          if (nodes[i].getCssClass() === 'WellTrack') { well = nodes[i]; }
+      }
+      const markerTool = this.widget.getToolByName('markereditor') as geotoolkit.welllog.widgets.tools.MarkerEditor;
+
+      if (this.widget.getSelectedTrack() === well) { return; }
+      if (well == null) {
+          markerTool.setShape(null);
+      } else {
+          markerTool.setShape(well.getMarkerLayer());
+      }
+      this.widget.setSelectedTrack(well);
+  }.bind(this);
   constructor() {
 
   }
@@ -45,6 +68,15 @@ export class MultiWellComponent implements AfterViewInit {
   public isSingleWellPanning(): boolean {
     return this.panning;
   }
+  public isTopsEditingMode(): boolean {
+      return this.topsEditingMode;
+  }
+  public isAddTopsMode(): boolean {
+      return this.addTopsMode;
+  }
+  public isRemoveTopsMode(): boolean {
+      return this.removeTopsMode;
+  }
   /**
    * Enable or disable single well mode
    * @param {boolean} enable enable mode
@@ -52,10 +84,66 @@ export class MultiWellComponent implements AfterViewInit {
   public setSingleWellPanning(enable: boolean) {
     if (this.widget != null) {
       this.panning = enable;
+      if (enable) {
+          this.setTopsEditingMode(false);
+          this.setRemoveTopsMode(false);
+          this.setAddTopsMode(false);
+      }
       this.widget.getToolByName('panningTools').setEnabled(true);
       const wellToolsContainer = this.widget.getToolByName('well-tools');
-      wellToolsContainer.setEnabled(!this.panning);
+      wellToolsContainer.setEnabled(!enable);
     }
+  }
+  public setTopsEditingMode(enable: boolean) {
+      if (this.widget != null) {
+          this.topsEditingMode = enable;
+          const markerTool = this.widget.getToolByName('markereditor') as geotoolkit.welllog.widgets.tools.MarkerEditor;
+          if (enable) {
+              this.setSingleWellPanning(false);
+              this.setRemoveTopsMode(false);
+              this.setAddTopsMode(false);
+              markerTool.setMode(geotoolkit.welllog.widgets.tools.MarkerEditor.Modes.Edit);
+          }
+          markerTool.setEnabled(enable);
+      }
+  }
+
+  public setAddTopsMode(enable: boolean) {
+      if (this.widget != null) {
+          this.addTopsMode = enable;
+          const markerTool = this.widget.getToolByName('markereditor') as geotoolkit.welllog.widgets.tools.MarkerEditor;
+          if (enable) {
+              this.setSingleWellPanning(false);
+              this.setTopsEditingMode(false);
+              this.setRemoveTopsMode(false);
+              markerTool.setMode(geotoolkit.welllog.widgets.tools.MarkerEditor.Modes.Insert);
+              colorOfInsertedMarker = geotoolkit.util.ColorUtil.getRandomColorRgb();
+              globalId++;
+              geotoolkit.window.addEventListener('pointermove', this.onPointerMove);
+              // markerTool.setShape(this.markerShape);
+          } else {
+            listOfTracks = [];
+            markerTool.setMode(geotoolkit.welllog.widgets.tools.MarkerEditor.Modes.Edit);
+            geotoolkit.window.removeEventListener('pointermove', this.onPointerMove);
+          }
+          markerTool.setEnabled(enable);
+      }
+  }
+
+  public setRemoveTopsMode(enable: boolean) {
+      if (this.widget != null) {
+          this.removeTopsMode = enable;
+          const markerTool = this.widget.getToolByName('markereditor') as geotoolkit.welllog.widgets.tools.MarkerEditor;
+          if (enable) {
+              this.setSingleWellPanning(false);
+              this.setTopsEditingMode(false);
+              this.setAddTopsMode(false);
+              markerTool.setMode('delete');
+          } else {
+              markerTool.setMode(geotoolkit.welllog.widgets.tools.MarkerEditor.Modes.Edit);
+          }
+          markerTool.setEnabled(enable);
+      }
   }
   /**
    * Return true if scaling is enable in horizontal direction
@@ -70,39 +158,6 @@ export class MultiWellComponent implements AfterViewInit {
    */
   public setHorizontalScale(enable: boolean) {
     this.horizontalScale = enable;
-  }
-  /**
-   * Add well
-   * @param {geotoolkit.util.Range} position position inside the display
-   * @param {geotoolkit.util.Range} depths depths
-   * @param {object|string} template template
-   * @param {IWellDataSource} data data
-   */
-  public addWell(position: geotoolkit.util.Range, depths: geotoolkit.util.Range, template?: object | string, data?: IWellDataSource) {
-    let correlation;
-    if (this.widget.getTracksCount() > 0) {
-      correlation = this.widget.createTrack(geotoolkit.welllog.multiwell.TrackType.CorrelationTrack, {
-        'width': MultiWellComponent.CorrelationTrackWidth
-      });
-      this.widget.addTrack(correlation);
-    }
-    const well = this.widget.createTrack(geotoolkit.welllog.multiwell.TrackType.WellTrack, {
-      'width': 0,
-      'range': position,
-      'welllog': {
-        'range': depths
-      },
-      'title': 'Well ' + (this.wellCounter++)
-    }) as geotoolkit.welllog.multiwell.IWellTrack;
-    if (template) {
-      well.loadTemplate(JSON.stringify(template));
-    }
-    // Add data binding
-    well.setDataBinding(this.curveBinding);
-    if (data) {
-      data.connect(well, this.widget);
-    }
-    this.widget.addTrack(well);
   }
   /**
    * Add wells
@@ -226,7 +281,7 @@ export class MultiWellComponent implements AfterViewInit {
         const wellTrack = track as geotoolkit.welllog.multiwell.IWellTrack;
         let top = geotoolkit.selection.from(wellTrack.getMarkerLayer()).where(isMarker).selectFirst();
         if (!top) {
-          top = new geotoolkit.welllog.LogMarker(depth, name);
+          top = new geotoolkit.welllog.LogMarker(depth, name).setId(globalId);
           top.setLineStyle(geotoolkit.attributes.LineStyle.fromObject({ 'color': color }));
           top.setTextStyle(geotoolkit.attributes.TextStyle.fromObject({
             'color': color,
@@ -250,18 +305,19 @@ export class MultiWellComponent implements AfterViewInit {
             rightWell = this.widget.getTrackAt(i + 1);
           }
           if (rightWell && leftWell) {
-            track.setWells(leftWell, rightWell);
             track.addChild(new geotoolkit.welllog.multiwell.correlation.CorrelationMarker(depth, depth, {
               'linestyle': {
                 'color': color,
                 'width': 2,
                 'pixelsnapmode': { 'x': true, 'y': true }
               }
-            }));
+            }).setId(globalId));
+            track.setWells(leftWell, rightWell);
           }
         }
       }
     }
+    globalId++;
   }
   /**
    * Add lithology correlation
@@ -299,6 +355,7 @@ export class MultiWellComponent implements AfterViewInit {
         }
       }
     }
+    globalId++;
   }
   private createWell(position, depths, template) {
     const well = this.widget.createTrack(geotoolkit.welllog.multiwell.TrackType.WellTrack, {
@@ -307,14 +364,18 @@ export class MultiWellComponent implements AfterViewInit {
       'welllog': {
         'range': depths
       },
-      'title': 'Well ' + (this.wellCounter++)
-    }) as any; //geotoolkit.welllog.multiwell.IWellTrack;
+      'title': 'Well ' + (this.wellCounter++),
+      'cssclass': 'WellTrack'
+    }) as any; // geotoolkit.welllog.multiwell.IWellTrack;
     if (template) {
       well.suspendUpdate();
       well.loadTemplate(JSON.stringify(template));
       well.resumeUpdate();
     }
-    // Add data binding
+      well.on(geotoolkit.scene.Node.Events.BoundsChanged, function () {
+          const markerEditor = this.widget.getToolByName('markereditor') as geotoolkit.welllog.widgets.tools.MarkerEditor;
+              markerEditor.update();
+      }.bind(this));
     well.setDataBinding(this.curveBinding);
     return well;
   }
@@ -329,11 +390,9 @@ export class MultiWellComponent implements AfterViewInit {
       'canvasElement': this.canvas.nativeElement,
       'root': widget
     });
-    // init tools container to support interactions with widget
-    const toolContainer = new geotoolkit.controls.tools.ToolsContainer(this.plot);
-    toolContainer.add(widget.getTool());
     widget.invalidate();
     this.widget = widget;
+
   }
   private createWidget(): geotoolkit.welllog.multiwell.MultiWellWidget {
     this.curveBinding = new CurveBinding();
@@ -347,6 +406,7 @@ export class MultiWellComponent implements AfterViewInit {
         }
     });
     this.initRubberBandTool(widget);
+    this.initializeMarkerTool(widget);
     this.setLevelOfDetails(widget);
     return widget;
   }
@@ -355,18 +415,17 @@ export class MultiWellComponent implements AfterViewInit {
       geotoolkit.controls.tools.RubberBandRenderMode.AspectRatio)
       .setEnabled(false)
       .addListener(geotoolkit.controls.tools.AbstractTool.Events.onStateChanged, function (sender) {
-        widget.getToolByName('panningTools').setEnabled(!sender.isEnabled());
-        this.panning = false;
-        widget.getToolByName('panningTools').setEnabled(!sender.isEnabled());
+        if (this.panning) {
+            this.panning = false;
+            widget.getToolByName('panningTools').setEnabled(false);
+        }
         widget.getToolByName('multiwell-splitter').setEnabled(!sender.isEnabled());
         const wellToolsContainer = widget.getToolByName('well-tools');
         wellToolsContainer.setEnabled(!sender.isEnabled());
       })
       .addListener(geotoolkit.controls.tools.RubberBand.Events.onZoomEnd, function (sender, eventArgs) {
         let newModelLimits = eventArgs.getArea();
-        // convert to device coordinate
         newModelLimits = widget.getTrackManipulatorLayer().getSceneTransform().transformRect(newModelLimits);
-        // convert to track container model
         newModelLimits = widget.getTrackContainer().getSceneTransform().inverseTransformRect(newModelLimits);
         widget.setCenterVisibleModelLimits(newModelLimits);
       });
@@ -379,7 +438,6 @@ export class MultiWellComponent implements AfterViewInit {
   }
   private configureHeaders() {
     const headerProvider = geotoolkit.welllog.header.LogVisualHeaderProvider.getDefaultInstance();
-
     // configure Depth ant Time axis header
     const logAxisVisualHeader = headerProvider.getHeaderProvider('geotoolkit.welllog.LogAxis') as
       geotoolkit.welllog.header.LogAxisVisualHeader;
@@ -400,7 +458,7 @@ export class MultiWellComponent implements AfterViewInit {
   private setLevelOfDetails(widget) {
     const rules = [{
       'condition': function (node) {
-        var transform = node.getSceneTransform();
+        const transform = node.getSceneTransform();
         return Math.abs(transform.getScaleX()) < 1;
       },
       'restore': false,
@@ -464,5 +522,190 @@ export class MultiWellComponent implements AfterViewInit {
         geotoolkit.scene.Node.enableSceneGraphNotification(true);
       }
     }));
+  }
+  private updateCorrelationMarker (track, id, leftDepth, rightDepth) {
+    const correlaionMarker = this.getCorrelationMarker(track, id);
+      if (correlaionMarker) {
+        correlaionMarker.setDepth(leftDepth, rightDepth);
+    } else {
+      const index = this.widget.indexOfTrack(track);
+      const leftWell = this.widget.getTrackAt(index - 1);
+      const rightWell = this.widget.getTrackAt(index + 1);
+      track.setWells(leftWell, rightWell);
+      const marker = new geotoolkit.welllog.multiwell.correlation.CorrelationMarker(leftDepth, rightDepth, {
+          'linestyle': {
+              'color': colorOfInsertedMarker,
+              'width': 2,
+              'pixelsnapmode': {
+                  'x': true,
+                  'y': true
+              }
+          }
+      }).setId(id);
+      track.addChild(marker);
+      }
+  }
+    private addTops (well, name, depth, color) {
+        const top = new geotoolkit.welllog.LogMarker(depth, 'top').setId(globalId);
+        top.setLineStyle({
+            'color': color
+        });
+        top.setTextStyle({
+            'color': color,
+            'alignment': 'left',
+            'font': '12px sans-serif'
+        });
+        top.setNameLabel(name);
+        top.setNameLabelPosition(geotoolkit.util.AnchorType.TopCenter);
+        top.setDepthLabel(depth);
+        top.setDepthLabelPosition(geotoolkit.util.AnchorType.BottomCenter);
+        well.getMarkerLayer().addChild(top);
+        return top;
+    }
+    private getLogMarker = function (track, id) {
+      return geotoolkit.selection.from(track).where(function (node) {
+          return node.getId() === id && node instanceof geotoolkit.welllog.LogMarker;
+      }).selectFirst() as geotoolkit.welllog.LogMarker;
+    };
+    private getCorrelationMarker = function (track, id) {
+        return geotoolkit.selection.from(track).where(function (node) {
+            return node.getId() === id && node instanceof geotoolkit.welllog.multiwell.correlation.CorrelationMarker;
+        }).selectFirst() as geotoolkit.welllog.multiwell.correlation.CorrelationMarker;
+    };
+    private getNeighbors (track) {
+      const index = this.widget.indexOfTrack(track);
+      let leftCorrelation, rightCorrelation, leftWell, rightWell;
+          if (index - 1 > 0) {
+              leftCorrelation = this.widget.getTrackAt(index - 1);
+              leftWell = this.widget.getTrackAt(index - 2);
+          }
+          if (index + 2 < this.widget.getTracksCount()) {
+              rightCorrelation = this.widget.getTrackAt(index + 1);
+              rightWell = this.widget.getTrackAt(index + 2);
+          }
+          return {
+              'leftWell': leftWell,
+              'leftCorrelation': leftCorrelation,
+              'rightWell': rightWell,
+              'rightCorrelation': rightCorrelation
+          };
+      }
+  private updateCorrelations = function (track, id, depth) {
+      let marker;
+      const neighbors = this.getNeighbors(track);
+      if (neighbors['leftWell']) {
+          marker = this.getLogMarker(neighbors['leftWell'], id);
+          if (marker) {
+              this.updateCorrelationMarker(neighbors['leftCorrelation'], id, marker.getDepth(), depth);
+          }
+      }
+      if (neighbors['rightWell']) {
+          marker = this.getLogMarker(neighbors['rightWell'], id);
+          if (marker) {
+              this.updateCorrelationMarker(neighbors['rightCorrelation'], id, depth, marker.getDepth());
+          }
+      }
+  };
+  private initializeMarkerTool (widget) {
+      const handleStyles = {
+          'activefillstyle': new geotoolkit.attributes.FillStyle('blue'),
+          'activelinestyle': new geotoolkit.attributes.FillStyle('darkblue'),
+          'inactivefillstyle': new geotoolkit.attributes.FillStyle('green'),
+          'inactivelinestyle': new geotoolkit.attributes.LineStyle('darkgreen'),
+          'ghostlinestyle': new geotoolkit.attributes.LineStyle('darkred')
+      };
+      const markerTool = new geotoolkit.welllog.widgets.tools.MarkerEditor(widget.getTrackManipulatorLayer())
+          .setHandleStyles(handleStyles)
+          .setHandlePainter(geotoolkit.scene.shapes.painters.SquarePainter)
+          .setHandleSize(10)
+          .setEnabled(false);
+      // Setup event listeners for Marker Editor
+      markerTool.addListener(geotoolkit.controls.editing.Events.DragEnd, function (sender, args) {
+          args['shape'].setDepth(args['depth']);
+          args['shape'].setDepthLabel(geotoolkit.util.Math.roundTo(args['depth'], 2));
+          const id = args['shape'].getId();
+          const well = geotoolkit.selection.from(args['shape'], geotoolkit.selection.Direction.Upwards).where(function (node) {
+              return node && node.getCssClass() === 'WellTrack';
+          }).selectFirst();
+          this.updateCorrelations(well, id, args['depth']);
+          sender.update();
+      }.bind(this));
+      markerTool.addListener(geotoolkit.controls.editing.Events.Dragging, function (sender, args) {
+          const point = new geotoolkit.util.Point(0, args['depth']);
+          sender.getManipulatorLayer().getSceneTransform().transformPoint(point, point);
+          args['shape'].getSceneTransform().inverseTransformPoint(point, point);
+          currentDepth = geotoolkit.util.Math.roundTo(point.getY(), 2);
+      });
+      markerTool.addListener(geotoolkit.controls.editing.Events.Insert, function (sender, args) {
+          const track = widget.getSelectedTrack();
+              if (track && track.getCssClass() === 'WellTrack') {
+                  const rect = track.getMarkerLayer().getBounds();
+                  currentDepth = geotoolkit.util.Math.roundTo(args['depth'], 2);
+                  const marker = this.getLogMarker(track, globalId);
+                  if (listOfTracks.indexOf(track) === -1 &&
+                      !marker && !(currentDepth < rect.getY() || currentDepth > rect.getBottom())) {
+                      this.addTops(track, '', currentDepth, colorOfInsertedMarker);
+                      listOfTracks.push(track);
+                      this.updateCorrelations(track, globalId, currentDepth);
+
+                  }
+          }
+      }.bind(this));
+      widget.getToolByName('pick')
+          .addListener(geotoolkit.controls.tools.Selection.Events.onSelectionEnd, function (selector, args) {
+              const selection = args.getSelection();
+              let selected = false;
+              for (let i = 0; i < selection.length; i++) {
+                  if (selection[i] instanceof geotoolkit.welllog.LogMarker) {
+                      if (markerTool.getMode() === 'delete') {
+                          const idOfNode = selection[i].getId();
+                          geotoolkit.selection.from(widget).where(function (node) {
+                              return node.getId() === idOfNode;
+                          }).execute(function (node) {
+                              if (node.getParent()) { node.getParent().removeChild(node); }
+                          });
+                          markerTool
+                              .setShape(null);
+                          break;
+                      }
+                      if (markerTool.getMode() === geotoolkit.welllog.widgets.tools.MarkerEditor.Modes.Edit) {
+                          if (selection[i] !== markerTool.getShape()) {
+                              markerTool.setShape(selection[i]);
+                              selected = true;
+                              break;
+                          }
+                      }
+                  }
+              }
+          });
+          widget.connectTool(new geotoolkit.controls.tools.ToolTipTool({
+              'model': widget,
+              'init': function (tool) {
+                  tool._marker = new geotoolkit.scene.shapes.Symbol({
+                      'ax': 0,
+                      'ay': 0,
+                      'width': 10,
+                      'height': 10,
+                      'sizeisindevicespace': true,
+                      'linestyle': null,
+                      'fillstyle': {
+                          'color': 'transparent'
+                      },
+                      'painter': geotoolkit.scene.shapes.painters.CirclePainter,
+                      'visible': false
+                  });
+                  tool._layer = new geotoolkit.scene.Layer({
+                      'children': tool._marker
+                  });
+                  widget.addChild(tool._layer);
+              },
+              'divelement': document.getElementById('tooltip-container'),
+              'callback': function () {
+                  return markerTool.isActive() ? currentDepth : '';
+              }
+          }));
+      widget.getTrackContainer().on(geotoolkit.scene.Node.Events.LocalTransformationChanged, function (sender) {
+          markerTool.update(); });
+      widget.getTool().insert(0, markerTool);
   }
 }
