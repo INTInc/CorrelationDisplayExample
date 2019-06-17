@@ -23,6 +23,8 @@ export class MultiWellComponent implements AfterViewInit {
   private removeTopsMode = false;
   private horizontalScale = false;
   private curveBinding: CurveBinding = null;
+  private fitting = false;
+  private restoring = false;
   private onPointerMove = function (event) {
       const nodes = new geotoolkit.selection.Selector().select(this.widget.getRoot(), event.offsetX, event.offsetY, 2);
       let well = null;
@@ -208,7 +210,7 @@ export class MultiWellComponent implements AfterViewInit {
     if (!depthScale) {
       depthScale = 100;
     }
-    this.suspendUpdate();
+    this.restoring = true;
     this.widget.scale(1.0 / scaleX, 1.0 / scaleY);
     let depthRange = null;
     this.widget.getTrackContainer().getChildren().forEach(function (element) {
@@ -220,16 +222,28 @@ export class MultiWellComponent implements AfterViewInit {
       element.setDepthScale(depthScale);
       depthRange = element.getDepthLimits();
     });
-    this.resumeUpdate();
     if (depthRange) {
       this.widget.alignToDepth((depthRange.getHigh() + depthRange.getLow()) / 2, 'center');
     }
+    this.restoring = false;
   }
   /**
    * Fit widget to bounds
    */
   public fitToBounds() {
-    this.widget.setCenterVisibleModelLimits(this.widget.getCenterModelLimits());
+    // index track can be invisible
+    let limits = this.widget.getCenterModelLimits();
+    let width = 0;
+    geotoolkit.selection.from(this.widget.getTrackContainer()).where(function (node ) {
+        return node.getVisible() && node instanceof geotoolkit.welllog.LogTrack && node.getCssClass() === 'INDEX_TRACK';
+    }).select(function (node) {
+        width += node.getWidth();
+    });
+    // we need to reduce a size
+    limits = limits.clone().setWidth(limits.getWidth() - width);
+    this.fitting = true;
+    this.widget.setCenterVisibleModelLimits(limits);
+    this.fitting = false;
   }
   /**
    * Scale selected well
@@ -459,8 +473,8 @@ export class MultiWellComponent implements AfterViewInit {
     const rules = [{
       'condition': function (node) {
         const transform = node.getSceneTransform();
-        return Math.abs(transform.getScaleX()) < 1;
-      },
+        return Math.abs(transform.getScaleX()) < 1 || this.fitting;
+      }.bind(this),
       'restore': false,
       'css': [
         '*[cssclass="INDEX_TRACK"] {',
@@ -486,8 +500,8 @@ export class MultiWellComponent implements AfterViewInit {
     }, {
       'condition': function (node) {
         const transform = node.getSceneTransform();
-        return Math.abs(transform.getScaleX()) >= 1;
-      },
+        return Math.abs(transform.getScaleX()) >= 1 || this.restoring;
+      }.bind(this),
       'restore': false,
       'css': [
         '*[cssclass="INDEX_TRACK"] {',
@@ -518,8 +532,8 @@ export class MultiWellComponent implements AfterViewInit {
         geotoolkit.scene.Node.enableSceneGraphNotification(false);
       },
       'end': function (node) {
-        widget.updateState(undefined, geotoolkit.scene.Node.StateChanges.Rebuild);
         geotoolkit.scene.Node.enableSceneGraphNotification(true);
+        widget.updateState(undefined, geotoolkit.scene.Node.StateChanges.Rebuild);
       }
     }));
   }
