@@ -470,10 +470,11 @@ export class MultiWellComponent implements AfterViewInit {
     headerProvider.registerHeaderProvider('geotoolkit.welllog.CompositeLogCurve', header);
   }
   private setLevelOfDetails(widget) {
+    const epsilon = 10e-10;
     const rules = [{
       'condition': function (node) {
         const transform = node.getSceneTransform();
-        return Math.abs(transform.getScaleX()) < 1 || this.fitting;
+        return Math.abs(transform.getScaleX() + epsilon) < 1 || this.fitting;
       }.bind(this),
       'restore': false,
       'css': [
@@ -500,7 +501,7 @@ export class MultiWellComponent implements AfterViewInit {
     }, {
       'condition': function (node) {
         const transform = node.getSceneTransform();
-        return Math.abs(transform.getScaleX()) >= 1 || this.restoring;
+        return Math.abs(transform.getScaleX() + epsilon) >= 1 || this.restoring;
       }.bind(this),
       'restore': false,
       'css': [
