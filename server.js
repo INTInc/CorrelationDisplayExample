@@ -23,7 +23,6 @@ if (cluster.isMaster) {
     require('./server/libloader.js');
     const express = require('express');
     const bodyParser = require('body-parser');
-    const validator = require('express-validator');
     const path = require('path');
 
     // Get our API routes
@@ -41,8 +40,7 @@ if (cluster.isMaster) {
 
     // static content
     app.use(express.static(path.join(__dirname, 'dist')));
-    app.use(validator()); // required for Express-Validator
-
+    
     // Set our api routes
     app.use('/api', api(app));
 
