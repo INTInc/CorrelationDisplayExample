@@ -9,8 +9,8 @@ import { SpinnerComponent } from '../spinner/spinner.component';
   styleUrls: ['./correlation.component.css']
 })
 export class CorrelationComponent implements OnInit, AfterViewInit {
-  @ViewChild(MultiWellComponent) welllog: MultiWellComponent;
-  @ViewChild(SpinnerComponent) spinner: SpinnerComponent;
+  @ViewChild(MultiWellComponent, {static: true}) welllog: MultiWellComponent;
+  @ViewChild(SpinnerComponent, {static: true}) spinner: SpinnerComponent;
   constructor(private templateService: TemplateService, private curveService: CurveService,
     private wellService: WellService, private topsService: TopsService) {
 
@@ -72,7 +72,7 @@ export class CorrelationComponent implements OnInit, AfterViewInit {
     this.spinner.show();
     const wellTemplate = await this.templateService.getTemplate('template1.json');
     const wells = await this.wellService.getWellsList();
-    const wellsArray = wells.json()['data'];
+    const wellsArray = wells['data'];
     let minDepth = Number.MAX_VALUE;
     wellsArray.forEach(async (well) => {
       minDepth = Math.min(+well['minDepth'], minDepth);
@@ -94,7 +94,7 @@ export class CorrelationComponent implements OnInit, AfterViewInit {
     const performance2 = performance.now();
     geotoolkit.log(performance2 - performance1);
     const tops = await this.topsService.getTopsList();
-    this.addCorrelation(tops.json());
+    this.addCorrelation(tops);
     this.welllog.resumeUpdate();
     this.spinner.hide();
   }

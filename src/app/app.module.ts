@@ -1,6 +1,5 @@
 import { BrowserModule } from '@angular/platform-browser';
 import { NgModule } from '@angular/core';
-import { HttpModule } from '@angular/http';
 
 import { AppComponent } from './app.component';
 // MultiWell Component and Correlation Component
@@ -18,10 +17,11 @@ import { CurveService } from './services/index';
 import { WellService } from './services/index';
 import { TopsService } from './services/index';
 import { TemplateService } from './services/index';
+import { HttpClientModule } from '@angular/common/http';
 
 export function AppConfigFactory() {
   return AppConfig.getInstance(AppTokens.configFile);
-};
+}
 
 @NgModule({
   declarations: [
@@ -32,7 +32,7 @@ export function AppConfigFactory() {
   ],
   imports: [
     BrowserModule,
-    HttpModule
+    HttpClientModule
   ],
   providers: [
     { provide: APP_TOKENS, useValue: AppTokens },

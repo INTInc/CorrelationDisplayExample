@@ -7,6 +7,6 @@ import { MultiWellComponent } from './components/multiwell/multiwell.component';
   styleUrls: ['./app.component.css']
 })
 export class AppComponent {
-  @ViewChild(MultiWellComponent) welllog: MultiWellComponent;
+  @ViewChild(MultiWellComponent, {static: false}) welllog: MultiWellComponent;
   title = 'app';
 }

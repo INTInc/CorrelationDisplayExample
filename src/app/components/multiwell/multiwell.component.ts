@@ -12,8 +12,8 @@ let globalId = 0;
 })
 export class MultiWellComponent implements AfterViewInit {
   private static readonly CorrelationTrackWidth = 50;
-  @ViewChild('plot') canvas: ElementRef;
-  @ViewChild('parent') parent: ElementRef;
+  @ViewChild('plot', {static: true}) canvas: ElementRef;
+  @ViewChild('parent', {static: true}) parent: ElementRef;
   private plot: geotoolkit.plot.Plot;
   private widget: geotoolkit.welllog.multiwell.MultiWellWidget;
   private wellCounter = 1;
