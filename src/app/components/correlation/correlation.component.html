@@ -20,9 +20,9 @@
       <li title="Zoom in" (click)="zoomIn($event)"><a href="#"><span class="glyphicon glyphicon-zoom-in"></span></a></li>
       <li title="Zoom out" (click)="zoomOut($event)"><a href="#"><span class="glyphicon glyphicon-zoom-out"></span></a></li>
       <li title="Rubber band zoom" (click)="doRubberBandZoom($event)"><a href="#"><span class="glyphicon geotoolkit-icon-rubber-band-rect"></span></a></li>
-      <li title="Zoom to fit" (click)="fitToBounds($event)"><a href="#"><span class="glyphicon geotoolkit-icon-fit-to-screen"></span></a></li>
-      <li title="Reset zoom" (click)="resetZoom($event)"><a href="#"><span class="glyphicon geotoolkit-icon-refresh"></span></a></li>
-      <li title="Zoom Mode" (click)="toggleZoomMode($event)"><a href="#">
+      <li title="Zoom to fit" (click)="fitToBounds()"><a href="#"><span class="glyphicon geotoolkit-icon-fit-to-screen"></span></a></li>
+      <li title="Reset zoom" (click)="resetZoom()"><a href="#"><span class="glyphicon geotoolkit-icon-refresh"></span></a></li>
+      <li title="Zoom Mode" (click)="toggleZoomMode()"><a href="#">
         <span class="glyphicon" [class.geotoolkit-icon-selection-vertical]="!isHorizontalScale()" [class.geotoolkit-icon-selection-free]="isHorizontalScale()">
         </span></a></li>
       <li title="Scales" class="dropdown">
