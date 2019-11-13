@@ -1,14 +1,14 @@
 # CorrelationDisplayExample
 
 How to display well log data with GeoToolkit.JS. This example requires to have GeoToolkit.JS 2.6. Visit www.int.com, please.
-## How to start 
+## How to start
 
-Create a folder called CorrelationDisplayExample\src\libs\geotoolkit and copy all files from the bin folder of GeoToolkit.JS 2.6 installation. 
-Create a folder called CorrelationDisplayExample\server\libs\geotoolkit and copy all files from the bin folder of GeoToolkit.JS 2.6 installation. 
+Create a folder called CorrelationDisplayExample\src\libs\geotoolkit and copy all files from the bin folder of GeoToolkit.JS 2.6 installation.
+Create a folder called CorrelationDisplayExample\server\libs\geotoolkit and copy all files from the bin folder of GeoToolkit.JS 2.6 installation.
 
 ## Node.js server
 
-Run `node server.js` in console. You need to run ng serve and node server.js together. Use different console instances. 
+Run `node server.js` in console. You need to run ng serve and node server.js together. Use different console instances.
 
 ## Development server
 
@@ -25,14 +25,6 @@ Run `ng build` to build the project. The build artifacts will be stored in the `
 ## Deployment
 
 Run `npm run distribution` to build distribution of the project. The build artifacts will be stored in the `build/` directory. Use correlationdisplayexample.zip
-
-## Running unit tests
-
-Run `ng test` to execute the unit tests via [Karma](https://karma-runner.github.io).
-
-## Running end-to-end tests
-
-Run `ng e2e` to execute the end-to-end tests via [Protractor](http://www.protractortest.org/).
 
 ## Further help
 
