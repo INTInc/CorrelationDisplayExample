@@ -1,10 +1,10 @@
 # CorrelationDisplayExample
 
-How to display well log data with GeoToolkit.JS. This example requires to have GeoToolkit.JS 2.6. Visit www.int.com, please.
+How to display well log data with GeoToolkit.JS. This example requires to have GeoToolkit.JS 2020 (3.0). Visit www.int.com, please.
 ## How to start
 
-Create a folder called CorrelationDisplayExample\src\libs\geotoolkit and copy all files from the bin folder of GeoToolkit.JS 2.6 installation.
-Create a folder called CorrelationDisplayExample\server\libs\geotoolkit and copy all files from the bin folder of GeoToolkit.JS 2.6 installation.
+Get access to npm.int.com. Visit www.int.com for it.
+Run npm install
 
 ## Node.js server
 

@@ -3,6 +3,7 @@ import { TemplateService, CurveService, WellService, TopsService } from '../../s
 import { RemoteDataSource } from '../../data/index';
 import { MultiWellComponent } from '../multiwell/multiwell.component';
 import { SpinnerComponent } from '../spinner/spinner.component';
+import { Range } from '@int/geotoolkit/util/Range';
 @Component({
   selector: 'app-correlation-component',
   templateUrl: './correlation.component.html',
@@ -84,15 +85,15 @@ export class CorrelationComponent implements OnInit, AfterViewInit {
       const well = wellsArray[i];
       const dataSource = RemoteDataSource.create(well, this.curveService);
       wellsToAdd.push({
-        'position': new geotoolkit.util.Range(+well['minDepth'] - minDepth, +well['maxDepth'] - minDepth),
-        'depths': new geotoolkit.util.Range(+well['minDepth'], +well['maxDepth']),
+        'position': new Range(+well['minDepth'] - minDepth, +well['maxDepth'] - minDepth),
+        'depths': new Range(+well['minDepth'], +well['maxDepth']),
         'template': wellTemplate,
         'data': dataSource
       });
     }
     this.welllog.addWells(wellsToAdd);
     const performance2 = performance.now();
-    geotoolkit.log(performance2 - performance1);
+    // geotoolkit.log(performance2 - performance1);
     const tops = await this.topsService.getTopsList();
     this.addCorrelation(tops);
     this.welllog.resumeUpdate();

@@ -1,11 +1,13 @@
 import { IWellDataSource } from "./welldatasource";
-
-export class CurveBinding extends geotoolkit.data.DataBinding {
+import {DataBinding} from '@int/geotoolkit/data/DataBinding';
+import {LogCurve} from '@int/geotoolkit/welllog/LogCurve';
+import {obfuscate} from '@int/geotoolkit/base';
+export class CurveBinding extends DataBinding {
     constructor() {
         super();
     }
     public accept(node) {
-        return node instanceof geotoolkit.welllog.LogCurve;
+        return node instanceof LogCurve;
     }
     public bind(curve, data: IWellDataSource) {
         if (data == null || !this.accept(curve)) {
@@ -25,4 +27,4 @@ export class CurveBinding extends geotoolkit.data.DataBinding {
         // TODO: We are not allowed to set data = null
     }
 }
-geotoolkit.obfuscate(CurveBinding, geotoolkit.data.DataBinding);
+obfuscate(CurveBinding, DataBinding);
