@@ -11,6 +11,7 @@ import {DataSet} from '@int/geotoolkit/data/DataSet';
 import {DataTable} from '@int/geotoolkit/data/DataTable';
 import {DataBindingRegistry} from '@int/geotoolkit/data/DataBindingRegistry';
 import {Events as DataEvents} from '@int/geotoolkit/data/Events';
+import { Node } from '@int/geotoolkit/scene/Node';
 import {obfuscate} from '@int/geotoolkit/base';
 const depthColumnName = 'DEPTH';
 function getCurveInfo(columns, name: string) {
@@ -118,7 +119,8 @@ export class RemoteDataSource extends DataSource implements IWellDataSource {
         // args = [{'start':..., 'end': ..., 'scale': ...]
         const visibleLimits = this.well.getVisibleDepthLimits();
         // Check if a track is in the visible area
-        if (visibleLimits.getSize() > 0) {
+        const node = this.well as any as Node;
+        if (visibleLimits.getSize() > 0 && node.getVisible()) {
             const start = Math.floor(this.widget.convertModelDepthToTrackDepth(this.well, args.start));
             const end = Math.ceil(this.widget.convertModelDepthToTrackDepth(this.well, args.end));
             const limits = new Range(start, end);

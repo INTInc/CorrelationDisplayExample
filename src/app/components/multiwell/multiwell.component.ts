@@ -43,6 +43,7 @@ import { ToolTipTool } from '@int/geotoolkit/controls/tools/ToolTipTool';
 import { Symbol } from '@int/geotoolkit/scene/shapes/Symbol';
 import { Layer } from '@int/geotoolkit/scene/Layer';
 import { CssStyle } from '@int/geotoolkit/css/CssStyle';
+
 let currentDepth;
 let listOfTracks = [];
 let colorOfInsertedMarker = ColorUtil.getRandomColorRgb();
@@ -241,6 +242,12 @@ export class MultiWellComponent implements AfterViewInit {
     this.widget.resumeUpdate();
   }
   /**
+   * Update layout
+   */
+  public updateLayout() {
+    this.widget.updateLayout();
+  }
+  /**
    * Reset zoom
    * @param {?number} [depthScale=100] depth scale to reset
    */
@@ -307,6 +314,13 @@ export class MultiWellComponent implements AfterViewInit {
         }
       });
     }
+  }
+  /**
+   * Return selected well
+   * @returns {IWellTrack}
+   */
+  public getSelectedTrack(): IWellTrack {
+    return this.widget.getSelectedTrack() as IWellTrack;
   }
   /**
    * Activate rubber band zoom. It will be deactivated automatically
