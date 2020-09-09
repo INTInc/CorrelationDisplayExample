@@ -1,6 +1,6 @@
 const DOMParser = require('xmldom').DOMParser;
 const jsdom = require('jsdom');
-const Canvas = require('canvas-prebuilt');
+const {Canvas} = require('canvas');
 
 // Load geotoolkit by reading a requirejs config and extracting the actual file path from it
 // The actual loading is then delegated to nodejs 'require'

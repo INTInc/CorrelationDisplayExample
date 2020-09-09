@@ -40,7 +40,7 @@ if (cluster.isMaster) {
 
     // static content
     app.use(express.static(path.join(__dirname, 'dist')));
-    
+
     // Set our api routes
     app.use('/api', api(app));
 
