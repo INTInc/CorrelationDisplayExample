@@ -1,5 +1,4 @@
-
-module.exports = function(dataStorage) {
+export const getCurvesData = function(dataStorage) {
     return async function(req, res, next) {
         if (!req.body) {
             res.status(400);
@@ -10,7 +9,7 @@ module.exports = function(dataStorage) {
         const range = req.body.range;
         const scale = req.body.scale;
         const useDecimation = req.body.usedecimation;
-        const testData = await dataStorage.getData(wellId, curves, range, scale, useDecimation);
+        const testData = await dataStorage.getLogData(wellId, curves, range, scale, useDecimation);
         res.status(200);
         res.json(testData);
     };

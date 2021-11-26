@@ -1,10 +1,15 @@
 // Include the cluster module
-const cluster = require('cluster');
+import cluster from 'cluster';
+import {cpus} from 'os';
+import express from 'express';
+import bodyParser from 'body-parser';
+import cors from 'cors';
+import {loadRoutes} from './server/routes.js';
 
 // Code to run if we're in the master process
-if (cluster.isMaster) {
+if (cluster.isPrimary) {
     // Count the machine's CPUs
-    const cpuCount = require('os').cpus().length;
+    const cpuCount = cpus.length;
 
     // Create a worker for each CPU
     for (let i = 0; i < cpuCount; i += 1) {
@@ -20,16 +25,8 @@ if (cluster.isMaster) {
 
     // Code to run if we're in a worker process
 } else {
-    require('./server/libloader.js');
-    const express = require('express');
-    const bodyParser = require('body-parser');
-    const path = require('path');
-
-    // Get our API routes
-    const api = require('./server/routes');
-
     const app = express();
-    const cors = require('cors');
+
 
     app.use(cors());
     app.use(bodyParser.urlencoded({
@@ -38,20 +35,9 @@ if (cluster.isMaster) {
     // parse application/json
     app.use(bodyParser.json());
 
-    // static content
-    app.use(express.static(path.join(__dirname, 'dist')));
-    
-    // Set our api routes
-    app.use('/api', api(app));
-
-    // Catch all other routes and return the index file
-    app.get('*', function(req, res) {
-        res.sendFile(path.join(__dirname, 'dist/index.html'));
-    });
-
     const port = process.env.PORT || 3000;
-    const server = require('http').Server(app); /* eslint-disable-line */
-    server.listen(port, function() {
+    app.listen(port, function() {
+        loadRoutes(app);
         console.log('Server running at http://127.0.0.1:' + port + '/');
     });
 }

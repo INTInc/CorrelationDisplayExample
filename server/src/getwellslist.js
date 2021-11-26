@@ -1,4 +1,4 @@
-module.exports = function(dataStorage) {
+export const getWellsList = function(dataStorage) {
     return async function(req, res, next) {
         if (!req.body) {
             res.status(400);

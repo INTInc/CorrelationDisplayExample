@@ -1,6 +1,6 @@
-const fs = require('fs');
+import fs from 'fs';
 
-module.exports = function() {
+export const getTemplate = function() {
     return function(req, res, next) {
         const path = './server/data/';
         const fileId = req.params.id;

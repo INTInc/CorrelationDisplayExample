@@ -40,9 +40,9 @@ import { Point } from '@int/geotoolkit/util/Point';
 import { Direction } from '@int/geotoolkit/selection/Direction';
 import { Events as SelectionEvents } from '@int/geotoolkit/controls/tools/Selection';
 import { ToolTipTool } from '@int/geotoolkit/controls/tools/ToolTipTool';
-import { Symbol } from '@int/geotoolkit/scene/shapes/Symbol';
 import { Layer } from '@int/geotoolkit/scene/Layer';
 import { CssStyle } from '@int/geotoolkit/css/CssStyle';
+import { SymbolShape } from '@int/geotoolkit/scene/shapes/SymbolShape';
 
 let currentDepth;
 let listOfTracks = [];
@@ -349,7 +349,7 @@ export class MultiWellComponent implements AfterViewInit {
       const track = this.widget.getTrackAt(i);
       if (!(track instanceof CorrelationTrack)) {
         const wellTrack = track as IWellTrack;
-        let top = fromNode(wellTrack.getMarkerLayer()).where(isMarker).selectFirst();
+        let top = fromNode(wellTrack.getMarkerLayer()).where(isMarker).selectFirst() as LogMarker;
         if (!top) {
           top = new LogMarker(depth, name).setId(globalId);
           const ls = LineStyle.fromObject({ 'color': color });
@@ -362,7 +362,7 @@ export class MultiWellComponent implements AfterViewInit {
           }));
           top.setNameLabel(name);
           top.setNameLabelPosition(AnchorType.TopCenter);
-          top.setDepthLabel(depth);
+          top.setDepthLabel(String(depth));
           top.setDepthLabelPosition(AnchorType.BottomCenter);
           wellTrack.getMarkerLayer().addChild(top);
         }
@@ -377,12 +377,14 @@ export class MultiWellComponent implements AfterViewInit {
             rightWell = this.widget.getTrackAt(i + 1);
           }
           if (rightWell && leftWell) {
-            track.addChild(new CorrelationMarker(depth, depth, {
+            track.addChild(new CorrelationMarker({
               'linestyle': {
                 'color': color,
                 'width': 2,
                 'pixelsnapmode': { 'x': true, 'y': true }
-              }
+              },
+              'leftdepth': depth,
+              'rightdepth': depth,
             }).setId(globalId));
             track.setWells(leftWell, rightWell);
           }
@@ -686,7 +688,7 @@ export class MultiWellComponent implements AfterViewInit {
       const leftWell = this.widget.getTrackAt(index - 1);
       const rightWell = this.widget.getTrackAt(index + 1);
       track.setWells(leftWell, rightWell);
-      const marker = new CorrelationMarker(leftDepth, rightDepth, {
+      const marker = new CorrelationMarker({
           'linestyle': {
               'color': colorOfInsertedMarker,
               'width': 2,
@@ -694,7 +696,9 @@ export class MultiWellComponent implements AfterViewInit {
                   'x': true,
                   'y': true
               }
-          }
+          },
+        'leftdepth': leftDepth,
+        'rightdepth': rightDepth,
       }).setId(id);
       track.addChild(marker);
       }
@@ -836,7 +840,7 @@ export class MultiWellComponent implements AfterViewInit {
           widget.connectTool(new ToolTipTool({
               'model': widget,
               'init': function (tool) {
-                  tool._marker = new Symbol({
+                  tool._marker = new SymbolShape({
                       'ax': 0,
                       'ay': 0,
                       'width': 10,

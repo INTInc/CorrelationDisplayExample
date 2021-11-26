@@ -1,6 +1,6 @@
-const fs = require('fs');
+import fs from 'fs';
 
-module.exports = function() {
+export const getTopsList = function() {
     return function(req, res, next) {
         const path = './server/data/tops.json';
         fs.readFile(path, function(error, data) {

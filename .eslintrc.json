@@ -1,7 +1,7 @@
-module.exports = {
+{
     "parserOptions": {
-        "ecmaVersion": 2017,
-        "sourceType": "node"
+        "ecmaVersion": 2018,
+        "sourceType": "module"
     },
     "env": {
         "browser": true,
@@ -32,11 +32,12 @@ module.exports = {
     },
     "extends": "google",
     "rules": {
-        'max-params': [1, 6],
-        'max-len': [2, {
-            code: 140,
-            ignoreComments: true
+        "max-params": [1, 6],
+        "max-len": [2, {
+            "code": 140,
+            "ignoreComments": true
         }],
-        'indent': [2, 4, {'SwitchCase': 1}]
+        "require-jsdoc" : 0,
+        "indent": [2, 4, {"SwitchCase": 1}]
     }
-};
+}

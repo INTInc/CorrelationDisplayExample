@@ -12,7 +12,8 @@ import {DataTable} from '@int/geotoolkit/data/DataTable';
 import {DataBindingRegistry} from '@int/geotoolkit/data/DataBindingRegistry';
 import {Events as DataEvents} from '@int/geotoolkit/data/Events';
 import { Node } from '@int/geotoolkit/scene/Node';
-import {obfuscate} from '@int/geotoolkit/base';
+import {obfuscate} from '@int/geotoolkit/lib';
+import {DataSeries} from '@int/geotoolkit/data/DataSeries';
 const depthColumnName = 'DEPTH';
 function getCurveInfo(columns, name: string) {
     for (let i = 0; i < columns.length; ++i) {
@@ -77,7 +78,7 @@ export class RemoteDataSource extends DataSource implements IWellDataSource {
             this.dataSet.invalidateRange();
         }
         const depths = this.dataSet.getIndexColumn(0);
-        const values = this.dataSet.getTable(0).getColumnByName(id);
+        const values = this.dataSet.getTable(0).getColumnByName(id) as DataSeries;
         return values !== null ? (new LogCurveDataSource({
                 'depths': depths,
                 'values': values,
@@ -161,5 +162,5 @@ export class RemoteDataSource extends DataSource implements IWellDataSource {
         return this.dataSet.getTable(0);
     }
 }
-obfuscate(RemoteDataSource, DataSource);
+obfuscate(RemoteDataSource);
 

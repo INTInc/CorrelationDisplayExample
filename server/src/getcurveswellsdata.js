@@ -1,5 +1,4 @@
-
-module.exports = function(dataStorage) {
+export const getCurvesWellsData = function(dataStorage) {
     return async function(req, res, next) {
         if (!req.body) {
             res.status(400);

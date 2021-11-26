@@ -93,7 +93,6 @@ export class CorrelationComponent implements OnInit, AfterViewInit {
     }
     this.welllog.addWells(wellsToAdd);
     const performance2 = performance.now();
-    // geotoolkit.log(performance2 - performance1);
     const tops = await this.topsService.getTopsList();
     this.addCorrelation(tops);
     this.welllog.resumeUpdate();

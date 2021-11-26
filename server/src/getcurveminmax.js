@@ -1,4 +1,4 @@
-module.exports = function(dataStorage) {
+export const getCurveMinMax = function(dataStorage) {
     return async function(req, res, next) {
         if (!req.params.id || !(typeof req.params.id === 'string')) {
             res.status(400);
