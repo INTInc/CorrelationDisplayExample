@@ -1,48 +1,44 @@
-import { Component, AfterViewInit, ViewChild, ElementRef, HostListener } from '@angular/core';
-import { IWellDataSource, CurveBinding } from '../../data/index';
+import {AfterViewInit, Component, ElementRef, HostListener, ViewChild} from '@angular/core';
+import {CurveBinding} from '../../data/index';
 import {Plot} from '@int/geotoolkit/plot/Plot';
 import {MultiWellWidget} from '@int/geotoolkit/welllog/multiwell/MultiWellWidget';
 import {Selector} from '@int/geotoolkit/selection/Selector';
-import {MarkerEditor} from '@int/geotoolkit/welllog/widgets/tools/MarkerEditor';
-import {Modes as MarkerEditorModes} from '@int/geotoolkit/welllog/widgets/tools/MarkerEditor';
+import {MarkerEditor, Modes as MarkerEditorModes} from '@int/geotoolkit/welllog/widgets/tools/MarkerEditor';
 import {ColorUtil} from '@int/geotoolkit/util/ColorUtil';
 import {TrackType} from '@int/geotoolkit/welllog/multiwell/TrackType';
-import {Node} from '@int/geotoolkit/scene/Node';
-import {Events as NodeEvents} from '@int/geotoolkit/scene/Node';
-import {StateChanges} from '@int/geotoolkit/scene/Node';
+import {Events as NodeEvents, Node, StateChanges} from '@int/geotoolkit/scene/Node';
 import {LogTrack} from '@int/geotoolkit/welllog/LogTrack';
 import {LogMarker} from '@int/geotoolkit/welllog/LogMarker';
 import {from as fromNode} from '@int/geotoolkit/selection/from';
-import {RubberBand} from '@int/geotoolkit/controls/tools/RubberBand';
-import {Events as RubberBandEvents} from '@int/geotoolkit/controls/tools/RubberBand';
+import {Events as RubberBandEvents, RubberBand} from '@int/geotoolkit/controls/tools/RubberBand';
 import {RubberBandRenderMode} from '@int/geotoolkit/controls/tools/RubberBandRenderMode';
 import {Events as AbstractToolEvents} from '@int/geotoolkit/controls/tools/AbstractTool';
 import {LogVisualHeaderProvider} from '@int/geotoolkit/welllog/header/LogVisualHeaderProvider';
-import {LogAxisVisualHeader} from '@int/geotoolkit/welllog/header/LogAxisVisualHeader';
-import {HeaderType as LogAxisVisualHeaderType} from '@int/geotoolkit/welllog/header/LogAxisVisualHeader';
+import {HeaderType as LogAxisVisualHeaderType, LogAxisVisualHeader} from '@int/geotoolkit/welllog/header/LogAxisVisualHeader';
 import {AdaptiveLogCurveVisualHeader} from '@int/geotoolkit/welllog/header/AdaptiveLogCurveVisualHeader';
 import {CorrelationMarker} from '@int/geotoolkit/welllog/multiwell/correlation/CorrelationMarker';
 import {CorrelationRange} from '@int/geotoolkit/welllog/multiwell/correlation/CorrelationRange';
-import {LineStyle} from '@int/geotoolkit/attributes/LineStyle';
-import {Patterns as LineStylePatterns} from '@int/geotoolkit/attributes/LineStyle';
-import {TextStyle} from '@int/geotoolkit/attributes/TextStyle';
+import {LineStyle, Patterns as LineStylePatterns} from '@int/geotoolkit/attributes/LineStyle';
+import {AlignmentStyle, TextStyle} from '@int/geotoolkit/attributes/TextStyle';
 import {FillStyle} from '@int/geotoolkit/attributes/FillStyle';
 import {AnchorType} from '@int/geotoolkit/util/AnchorType';
-import {SquarePainter} from '@int/geotoolkit/scene/shapes/painters/SquarePainter';
 import {CirclePainter} from '@int/geotoolkit/scene/shapes/painters/CirclePainter';
 import {Events as EditingEvents} from '@int/geotoolkit/controls/editing/Events';
-import { from } from 'rxjs';
-import { IWellTrack } from '@int/geotoolkit/welllog/multiwell/IWellTrack';
-import { CorrelationTrack } from '@int/geotoolkit/welllog/multiwell/CorrelationTrack';
-import { ResponsiveStyle } from '@int/geotoolkit/responsive/ResponsiveStyle';
-import { MathUtil as IntMath } from '@int/geotoolkit/util/MathUtil';
-import { Point } from '@int/geotoolkit/util/Point';
-import { Direction } from '@int/geotoolkit/selection/Direction';
-import { Events as SelectionEvents } from '@int/geotoolkit/controls/tools/Selection';
-import { ToolTipTool } from '@int/geotoolkit/controls/tools/ToolTipTool';
-import { Layer } from '@int/geotoolkit/scene/Layer';
-import { CssStyle } from '@int/geotoolkit/css/CssStyle';
-import { SymbolShape } from '@int/geotoolkit/scene/shapes/SymbolShape';
+import {IWellTrack} from '@int/geotoolkit/welllog/multiwell/IWellTrack';
+import {CorrelationTrack} from '@int/geotoolkit/welllog/multiwell/CorrelationTrack';
+import {ResponsiveStyle} from '@int/geotoolkit/responsive/ResponsiveStyle';
+import {MathUtil as IntMath} from '@int/geotoolkit/util/MathUtil';
+import {Point} from '@int/geotoolkit/util/Point';
+import {Direction} from '@int/geotoolkit/selection/Direction';
+import {Events as SelectionEvents} from '@int/geotoolkit/controls/tools/Selection';
+import {ToolTipTool} from '@int/geotoolkit/controls/tools/ToolTipTool';
+import {Layer} from '@int/geotoolkit/scene/Layer';
+import {CssStyle} from '@int/geotoolkit/css/CssStyle';
+import {SymbolShape} from '@int/geotoolkit/scene/shapes/SymbolShape';
+import {AbstractLogVisualEditingTool} from '@int/geotoolkit/welllog/widgets/tools/AbstractLogVisualEditingTool';
+import {SquarePainter} from '@int/geotoolkit/scene/shapes/painters/SquarePainter';
+import HandleStyles = AbstractLogVisualEditingTool.HandleStyles;
+import {WellTrack} from '@int/geotoolkit/welllog/multiwell/WellTrack';
 
 let currentDepth;
 let listOfTracks = [];
@@ -72,7 +68,10 @@ export class MultiWellComponent implements AfterViewInit {
       const nodes = new Selector().select(this.widget.getRoot(), event.offsetX, event.offsetY, 2);
       let well = null;
       for (let i = 0; i < nodes.length; ++i) {
-          if (nodes[i].getCssClass() === 'WellTrack') { well = nodes[i]; }
+          const item = nodes[i];
+          if (item instanceof Node && item.getCssClass() === 'WellTrack') {
+              well = nodes[i];
+          }
       }
       const markerTool = this.widget.getToolByName('markereditor') as MarkerEditor;
 
@@ -309,7 +308,7 @@ export class MultiWellComponent implements AfterViewInit {
       return;
     } else {
       this.widget.getTrackContainer().getChildren().forEach(function (element) {
-        if (element.getClassName() === 'geotoolkit.welllog.multiwell.WellTrack') {
+        if (element instanceof WellTrack) {
           element.setDepthScale(scale);
         }
       });
@@ -357,7 +356,7 @@ export class MultiWellComponent implements AfterViewInit {
           top.setLineStyle(ls);
           top.setTextStyle(TextStyle.fromObject({
             'color': color,
-            'alignment': 'left',
+            'alignment': AlignmentStyle.Left,
             'font': '12px sans-serif'
           }));
           top.setNameLabel(name);
@@ -419,12 +418,15 @@ export class MultiWellComponent implements AfterViewInit {
           const correlation = fromNode(track).where(isRangeCorrelation).selectFirst();
           if (!correlation) {
             track.setWells(leftWell, rightWell);
-            track.addChild(new CorrelationRange(startDepth, startDepth,
-              endDepth, endDepth, {
-                'fillstyle': {
-                  'color': color
-                }
-              }));
+            track.addChild(new CorrelationRange({
+              'leftstartdepth': startDepth,
+              'leftenddepth': endDepth,
+              'rightstartdepth': startDepth,
+              'rightenddepth': endDepth,
+              'fillstyle': {
+                'color': color
+              }
+            }));
           }
         }
       }
@@ -461,7 +463,7 @@ export class MultiWellComponent implements AfterViewInit {
   private initPlot() {
     const widget = this.createWidget();
     this.plot = new Plot({
-      'canvasElement': this.canvas.nativeElement,
+      'canvaselement': this.canvas.nativeElement,
       'root': widget
     });
     widget.invalidate();
@@ -711,7 +713,7 @@ export class MultiWellComponent implements AfterViewInit {
         });
         top.setTextStyle({
             'color': color,
-            'alignment': 'left',
+            'alignment': AlignmentStyle.Left,
             'font': '12px sans-serif'
         });
         top.setNameLabel(name);
@@ -766,9 +768,9 @@ export class MultiWellComponent implements AfterViewInit {
       }
   };
   private initializeMarkerTool (widget) {
-      const handleStyles = {
+      const handleStyles: HandleStyles = {
           'activefillstyle': new FillStyle('blue'),
-          'activelinestyle': new FillStyle('darkblue'),
+          'activelinestyle': new LineStyle('darkblue'),
           'inactivefillstyle': new FillStyle('green'),
           'inactivelinestyle': new LineStyle('darkgreen'),
           'ghostlinestyle': new LineStyle('darkred')
@@ -837,32 +839,36 @@ export class MultiWellComponent implements AfterViewInit {
                   }
               }
           });
-          widget.connectTool(new ToolTipTool({
-              'model': widget,
-              'init': function (tool) {
-                  tool._marker = new SymbolShape({
-                      'ax': 0,
-                      'ay': 0,
-                      'width': 10,
-                      'height': 10,
-                      'sizeisindevicespace': true,
-                      'linestyle': null,
-                      'fillstyle': {
-                          'color': 'transparent'
-                      },
-                      'painter': CirclePainter,
-                      'visible': false
-                  });
-                  tool._layer = new Layer({
-                      'children': tool._marker
-                  });
-                  widget.addChild(tool._layer);
-              },
-              'divelement': document.getElementById('tooltip-container'),
-              'callback': function () {
-                  return markerTool.isActive() ? currentDepth : '';
-              }
-          }));
+          const markerShape = new SymbolShape({
+            'ax': 0,
+            'ay': 0,
+            'width': 10,
+            'height': 10,
+            'sizeisindevicespace': true,
+            'linestyle': null,
+            'fillstyle': {
+              'color': 'transparent'
+            },
+            'painter': CirclePainter,
+            'visible': false
+          });
+          const markerLayer = new Layer().addChild([markerShape]);
+          const tooltipTool = new ToolTipTool({
+            // 'model': widget,
+            'init': function (tool) {
+              // tool._marker =
+              // tool._layer = new Layer({
+              //   'children': tool._marker
+              // });
+              // widget.addChild(tool._layer);
+              widget.addChild(markerLayer);
+            },
+            'divelement': document.getElementById('tooltip-container'),
+            'callback': function () {
+              return markerTool.isActive() ? currentDepth : '';
+            }
+          });
+          widget.connectTool(tooltipTool);
       widget.getTrackContainer().on(NodeEvents.LocalTransformationChanged, function (sender) {
           markerTool.update(); });
       widget.getTool().insert(0, markerTool);

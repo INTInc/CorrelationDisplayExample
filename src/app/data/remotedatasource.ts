@@ -77,7 +77,7 @@ export class RemoteDataSource extends DataSource implements IWellDataSource {
             // Invalidate table (At the current moment table cannot be invalidated by column)
             this.dataSet.invalidateRange();
         }
-        const depths = this.dataSet.getIndexColumn(0);
+        const depths = this.dataSet.getIndexColumn(0) as DataSeries;
         const values = this.dataSet.getTable(0).getColumnByName(id) as DataSeries;
         return values !== null ? (new LogCurveDataSource({
                 'depths': depths,
