@@ -1,4 +1,4 @@
-import { async, ComponentFixture, TestBed } from '@angular/core/testing';
+import { ComponentFixture, TestBed, waitForAsync } from '@angular/core/testing';
 
 import { CorrelationComponent } from './correlation.component';
 
@@ -6,7 +6,7 @@ describe('OverlayComponent', () => {
   let component: CorrelationComponent;
   let fixture: ComponentFixture<CorrelationComponent>;
 
-  beforeEach(async(() => {
+  beforeEach(waitForAsync(() => {
     TestBed.configureTestingModule({
       declarations: [ CorrelationComponent ]
     })

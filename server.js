@@ -6,14 +6,15 @@ import bodyParser from 'body-parser';
 import cors from 'cors';
 import {loadRoutes} from './server/routes.js';
 
-// Code to run if we're in the master process
-if (cluster.isPrimary) {
-    // Count the machine's CPUs
-    const cpuCount = cpus.length;
+const cpuCount = cpus().length;
 
+// Code to run if we're in the master process
+if (cluster.isPrimary && cpuCount !== 0) {
     // Create a worker for each CPU
-    for (let i = 0; i < cpuCount; i += 1) {
-        cluster.fork();
+    for (let i = 0; i < cpuCount; i++) {
+        cluster.fork({
+            workerverbose: i === 0,
+        });
     }
 
     // Listen for terminating workers
@@ -26,7 +27,6 @@ if (cluster.isPrimary) {
     // Code to run if we're in a worker process
 } else {
     const app = express();
-
 
     app.use(cors());
     app.use(bodyParser.urlencoded({
