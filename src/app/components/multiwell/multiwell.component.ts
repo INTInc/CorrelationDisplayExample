@@ -491,7 +491,7 @@ export class MultiWellComponent implements AfterViewInit {
     const rubberBandTool = new RubberBand(widget.getTrackManipulatorLayer(),
       RubberBandRenderMode.AspectRatio)
       .setEnabled(false)
-      .addListener(AbstractToolEvents.onStateChanged, function (sender) {
+      .on(AbstractToolEvents.onStateChanged, function (eventType, sender, args) {
         if (this.panning) {
             this.panning = false;
             widget.getToolByName('panningTools').setEnabled(false);
@@ -499,8 +499,8 @@ export class MultiWellComponent implements AfterViewInit {
         widget.getToolByName('multiwell-splitter').setEnabled(!sender.isEnabled());
         const wellToolsContainer = widget.getToolByName('well-tools');
         wellToolsContainer.setEnabled(!sender.isEnabled());
-      })
-      .addListener(RubberBandEvents.onZoomEnd, function (sender, eventArgs) {
+      }.bind(this))
+      .on(RubberBandEvents.onZoomEnd, function (eventType, sender, eventArgs) {
         let newModelLimits = eventArgs.getArea();
         newModelLimits = widget.getTrackManipulatorLayer().getSceneTransform().transformRect(newModelLimits);
         newModelLimits = widget.getTrackContainer().getSceneTransform().inverseTransformRect(newModelLimits);
@@ -707,6 +707,7 @@ export class MultiWellComponent implements AfterViewInit {
   }
     private addTops (well, name, depth, color) {
         const top = new LogMarker(depth, 'top');
+        console.log('Added top: ', color);
         top.setId(globalId);
         top.setLineStyle({
             'color': color
@@ -781,7 +782,7 @@ export class MultiWellComponent implements AfterViewInit {
       markerTool.setHandleSize(10);
       markerTool.setEnabled(false);
       // Setup event listeners for Marker Editor
-      markerTool.addListener(EditingEvents.DragEnd, function (sender, args) {
+      markerTool.on(EditingEvents.DragEnd, function (eventType, sender, args) {
           args['shape'].setDepth(args['depth']);
           args['shape'].setDepthLabel(IntMath.roundTo(args['depth'], 2));
           const id = args['shape'].getId();
@@ -791,13 +792,13 @@ export class MultiWellComponent implements AfterViewInit {
           this.updateCorrelations(well, id, args['depth']);
           sender.update();
       }.bind(this));
-      markerTool.addListener(EditingEvents.Dragging, function (sender, args) {
+      markerTool.on(EditingEvents.Dragging, function (eventType, sender, args) {
           const point = new Point(0, args['depth']);
           sender.getManipulatorLayer().getSceneTransform().transformPoint(point, point);
           args['shape'].getSceneTransform().inverseTransformPoint(point, point);
           currentDepth = IntMath.roundTo(point.getY(), 2);
       });
-      markerTool.addListener(EditingEvents.Insert, function (sender, args) {
+      markerTool.on(EditingEvents.Insert, function (eventType, sender, args) {
           const track = widget.getSelectedTrack();
               if (track && track.getCssClass() === 'WellTrack') {
                   const rect = track.getMarkerLayer().getBounds();
@@ -813,7 +814,7 @@ export class MultiWellComponent implements AfterViewInit {
           }
       }.bind(this));
       widget.getToolByName('pick')
-          .addListener(SelectionEvents.onSelectionEnd, function (selector, args) {
+          .on(SelectionEvents.onSelectionEnd, function (eventType, selector, args) {
               const selection = args.getSelection();
               let selected = false;
               for (let i = 0; i < selection.length; i++) {
