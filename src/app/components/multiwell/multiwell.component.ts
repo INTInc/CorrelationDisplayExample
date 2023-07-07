@@ -854,13 +854,7 @@ export class MultiWellComponent implements AfterViewInit {
           });
           const markerLayer = new Layer().addChild([markerShape]);
           const tooltipTool = new ToolTipTool({
-            // 'model': widget,
-            'init': function (tool) {
-              // tool._marker =
-              // tool._layer = new Layer({
-              //   'children': tool._marker
-              // });
-              // widget.addChild(tool._layer);
+            'init': function (_tool) {
               widget.addChild(markerLayer);
             },
             'divelement': document.getElementById('tooltip-container'),
