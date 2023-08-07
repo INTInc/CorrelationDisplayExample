@@ -24,7 +24,6 @@ import {FillStyle} from '@int/geotoolkit/attributes/FillStyle';
 import {AnchorType} from '@int/geotoolkit/util/AnchorType';
 import {CirclePainter} from '@int/geotoolkit/scene/shapes/painters/CirclePainter';
 import {Events as EditingEvents} from '@int/geotoolkit/controls/editing/Events';
-import {IWellTrack} from '@int/geotoolkit/welllog/multiwell/IWellTrack';
 import {CorrelationTrack} from '@int/geotoolkit/welllog/multiwell/CorrelationTrack';
 import {ResponsiveStyle} from '@int/geotoolkit/responsive/ResponsiveStyle';
 import {MathUtil as IntMath} from '@int/geotoolkit/util/MathUtil';
@@ -208,7 +207,7 @@ export class MultiWellComponent implements AfterViewInit {
    * @param {any[]} wells wells
    */
   public addWells(wells: any) {
-    const tracks = [];
+    const tracks: CorrelationTrack[] & WellTrack[] = [];
     for (let i = 0; i < wells.length; ++i) {
       if (this.widget.getTracksCount() + i > 0) {
         tracks.push(this.widget.createTrack(TrackType.CorrelationTrack, {
@@ -224,7 +223,7 @@ export class MultiWellComponent implements AfterViewInit {
       tracks.push(well);
     }
     // workaround for TypeScript. it will be replaced by a new version of toolkit
-    this.widget.addTrack((tracks as unknown) as IWellTrack);
+    this.widget.addTrack(tracks);
   }
   /**
    * Suspend widget update
@@ -302,7 +301,7 @@ export class MultiWellComponent implements AfterViewInit {
       return;
     }
     if (this.panning === true && this.widget.getSelectedTrack() !== null) {
-      const track = this.widget.getSelectedTrack() as IWellTrack;
+      const track = this.widget.getSelectedTrack() as WellTrack;
       track.setDepthScale(scale);
     } else if (this.panning === true && this.widget.getSelectedTrack() === null) {
       return;
@@ -316,10 +315,10 @@ export class MultiWellComponent implements AfterViewInit {
   }
   /**
    * Return selected well
-   * @returns {IWellTrack}
+   * @returns {WellTrack}
    */
-  public getSelectedTrack(): IWellTrack {
-    return this.widget.getSelectedTrack() as IWellTrack;
+  public getSelectedTrack(): WellTrack {
+    return this.widget.getSelectedTrack() as WellTrack;
   }
   /**
    * Activate rubber band zoom. It will be deactivated automatically
@@ -337,17 +336,14 @@ export class MultiWellComponent implements AfterViewInit {
    * @param {string} color color
    */
   public addTopsCorrelation(depth: number, name: string, color: string) {
-    const isMarker = function (node) {
-      return (node instanceof LogMarker) && node.getDepth() === depth;
-    };
-    const isMarkerCorrelation = function (node) {
-      return (node instanceof CorrelationMarker) &&
+    const isMarker = (node) => (node instanceof LogMarker) && node.getDepth() === depth;
+    const isMarkerCorrelation = (node) => (node instanceof CorrelationMarker) &&
         (node.getLeftDepth() === depth) && (node.getRightDepth() === depth);
-    };
+
     for (let i = 0; i < this.widget.getTracksCount(); ++i) {
       const track = this.widget.getTrackAt(i);
       if (!(track instanceof CorrelationTrack)) {
-        const wellTrack = track as IWellTrack;
+        const wellTrack = track as WellTrack;
         let top = fromNode(wellTrack.getMarkerLayer()).where(isMarker).selectFirst() as LogMarker;
         if (!top) {
           top = new LogMarker(depth, name).setId(globalId);
@@ -367,7 +363,7 @@ export class MultiWellComponent implements AfterViewInit {
         }
       } else {
         const correlation = fromNode(track).where(isMarkerCorrelation).selectFirst();
-        if (!correlation) {
+        if (correlation == null) {
           let leftWell, rightWell;
           if (i >= 1) {
             leftWell = this.widget.getTrackAt(i - 1);
@@ -376,7 +372,8 @@ export class MultiWellComponent implements AfterViewInit {
             rightWell = this.widget.getTrackAt(i + 1);
           }
           if (rightWell && leftWell) {
-            track.addChild(new CorrelationMarker({
+            track.setWells(leftWell, rightWell);
+            const correlationMarker = new CorrelationMarker({
               'linestyle': {
                 'color': color,
                 'width': 2,
@@ -384,8 +381,9 @@ export class MultiWellComponent implements AfterViewInit {
               },
               'leftdepth': depth,
               'rightdepth': depth,
-            }).setId(globalId));
-            track.setWells(leftWell, rightWell);
+            });
+            correlationMarker.setId(globalId);
+            track.addChild(correlationMarker);
           }
         }
       }
@@ -442,7 +440,7 @@ export class MultiWellComponent implements AfterViewInit {
       },
       'title': 'Well ' + (this.wellCounter++),
       'cssclass': 'WellTrack'
-    }) as any; // geotoolkit.welllog.multiwell.IWellTrack;
+    });
     if (template) {
       well.suspendUpdate();
       well.loadTemplate(JSON.stringify(template));
@@ -682,9 +680,9 @@ export class MultiWellComponent implements AfterViewInit {
     }));
   }
   private updateCorrelationMarker (track, id, leftDepth, rightDepth) {
-    const correlaionMarker = this.getCorrelationMarker(track, id);
-      if (correlaionMarker) {
-        correlaionMarker.setDepth(leftDepth, rightDepth);
+    const correlationMarker = this.getCorrelationMarker(track, id);
+    if (correlationMarker) {
+        correlationMarker.setDepth(leftDepth, rightDepth);
     } else {
       const index = this.widget.indexOfTrack(track);
       const leftWell = this.widget.getTrackAt(index - 1);
@@ -703,71 +701,70 @@ export class MultiWellComponent implements AfterViewInit {
         'rightdepth': rightDepth,
       }).setId(id);
       track.addChild(marker);
-      }
-  }
-    private addTops (well, name, depth, color) {
-        const top = new LogMarker(depth, 'top');
-        console.log('Added top: ', color);
-        top.setId(globalId);
-        top.setLineStyle({
-            'color': color
-        });
-        top.setTextStyle({
-            'color': color,
-            'alignment': AlignmentStyle.Left,
-            'font': '12px sans-serif'
-        });
-        top.setNameLabel(name);
-        top.setNameLabelPosition(AnchorType.TopCenter);
-        top.setDepthLabel(depth);
-        top.setDepthLabelPosition(AnchorType.BottomCenter);
-        well.getMarkerLayer().addChild(top);
-        return top;
     }
-    private getLogMarker = function (track, id) {
-      return fromNode(track).where(function (node) {
-          return node.getId() === id && node instanceof LogMarker;
-      }).selectFirst() as LogMarker;
-    };
-    private getCorrelationMarker = function (track, id) {
-        return fromNode(track).where(function (node) {
-            return node.getId() === id && node instanceof CorrelationMarker;
-        }).selectFirst() as CorrelationMarker;
-    };
-    private getNeighbors (track) {
-      const index = this.widget.indexOfTrack(track);
-      let leftCorrelation, rightCorrelation, leftWell, rightWell;
-          if (index - 1 > 0) {
-              leftCorrelation = this.widget.getTrackAt(index - 1);
-              leftWell = this.widget.getTrackAt(index - 2);
-          }
-          if (index + 2 < this.widget.getTracksCount()) {
-              rightCorrelation = this.widget.getTrackAt(index + 1);
-              rightWell = this.widget.getTrackAt(index + 2);
-          }
-          return {
-              'leftWell': leftWell,
-              'leftCorrelation': leftCorrelation,
-              'rightWell': rightWell,
-              'rightCorrelation': rightCorrelation
-          };
-      }
-  private updateCorrelations = function (track, id, depth) {
-      let marker;
-      const neighbors = this.getNeighbors(track);
-      if (neighbors['leftWell']) {
-          marker = this.getLogMarker(neighbors['leftWell'], id);
-          if (marker) {
-              this.updateCorrelationMarker(neighbors['leftCorrelation'], id, marker.getDepth(), depth);
-          }
-      }
-      if (neighbors['rightWell']) {
-          marker = this.getLogMarker(neighbors['rightWell'], id);
-          if (marker) {
-              this.updateCorrelationMarker(neighbors['rightCorrelation'], id, depth, marker.getDepth());
-          }
-      }
+  }
+  private addTops (well, name, depth, color) {
+      const top = new LogMarker(depth, 'top');
+      top.setId(globalId);
+      top.setLineStyle({
+          'color': color
+      });
+      top.setTextStyle({
+          'color': color,
+          'alignment': AlignmentStyle.Left,
+          'font': '12px sans-serif'
+      });
+      top.setNameLabel(name);
+      top.setNameLabelPosition(AnchorType.TopCenter);
+      top.setDepthLabel(depth);
+      top.setDepthLabelPosition(AnchorType.BottomCenter);
+      well.getMarkerLayer().addChild(top);
+      return top;
+  }
+  private getLogMarker = function (track, id) {
+    return fromNode(track).where(function (node) {
+        return node.getId() === id && node instanceof LogMarker;
+    }).selectFirst() as LogMarker;
   };
+  private getCorrelationMarker = function (track, id) {
+      return fromNode(track).where(function (node) {
+          return node.getId() === id && node instanceof CorrelationMarker;
+      }).selectFirst() as CorrelationMarker;
+  };
+  private getNeighbors (track) {
+    const index = this.widget.indexOfTrack(track);
+    let leftCorrelation, rightCorrelation, leftWell, rightWell;
+    if (index - 1 > 0) {
+      leftCorrelation = this.widget.getTrackAt(index - 1);
+      leftWell = this.widget.getTrackAt(index - 2);
+    }
+    if (index + 2 < this.widget.getTracksCount()) {
+      rightCorrelation = this.widget.getTrackAt(index + 1);
+      rightWell = this.widget.getTrackAt(index + 2);
+    }
+    return {
+      'leftWell': leftWell,
+      'leftCorrelation': leftCorrelation,
+      'rightWell': rightWell,
+      'rightCorrelation': rightCorrelation
+    };
+  }
+  private updateCorrelations (track, id, depth) {
+    let marker;
+    const neighbors = this.getNeighbors(track);
+    if (neighbors['leftWell']) {
+        marker = this.getLogMarker(neighbors['leftWell'], id);
+        if (marker) {
+            this.updateCorrelationMarker(neighbors['leftCorrelation'], id, marker.getDepth(), depth);
+        }
+    }
+    if (neighbors['rightWell']) {
+        marker = this.getLogMarker(neighbors['rightWell'], id);
+        if (marker) {
+            this.updateCorrelationMarker(neighbors['rightCorrelation'], id, depth, marker.getDepth());
+        }
+    }
+  }
   private initializeMarkerTool (widget) {
       const handleStyles: HandleStyles = {
           'activefillstyle': new FillStyle('blue'),
@@ -840,22 +837,24 @@ export class MultiWellComponent implements AfterViewInit {
                   }
               }
           });
-          const markerShape = new SymbolShape({
-            'ax': 0,
-            'ay': 0,
-            'width': 10,
-            'height': 10,
-            'sizeisindevicespace': true,
-            'linestyle': null,
-            'fillstyle': {
-              'color': 'transparent'
-            },
-            'painter': CirclePainter,
-            'visible': false
-          });
-          const markerLayer = new Layer().addChild([markerShape]);
           const tooltipTool = new ToolTipTool({
-            'init': function (_tool) {
+            'init': function () {
+              const markerShape = new SymbolShape({
+                'ax': 0,
+                'ay': 0,
+                'width': 10,
+                'height': 10,
+                'sizeisindevicespace': true,
+                'linestyle': null,
+                'fillstyle': {
+                  'color': 'transparent'
+                },
+                'painter': CirclePainter,
+                'visible': false
+              });
+              const markerLayer = new Layer({
+                'children': markerShape
+              });
               widget.addChild(markerLayer);
             },
             'divelement': document.getElementById('tooltip-container'),
@@ -864,8 +863,9 @@ export class MultiWellComponent implements AfterViewInit {
             }
           });
           widget.connectTool(tooltipTool);
-      widget.getTrackContainer().on(NodeEvents.LocalTransformationChanged, function (sender) {
-          markerTool.update(); });
+      widget.getTrackContainer().on(NodeEvents.LocalTransformationChanged, function () {
+          markerTool.update();
+      });
       widget.getTool().insert(0, markerTool);
   }
 }
