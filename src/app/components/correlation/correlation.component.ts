@@ -78,7 +78,6 @@ export class CorrelationComponent implements OnInit, AfterViewInit {
     wellsArray.forEach(async (well) => {
       minDepth = Math.min(+well['minDepth'], minDepth);
     });
-    const performance1 = performance.now();
     this.welllog.suspendUpdate();
     const wellsToAdd = [];
     for (let i = 0; i < wellsArray.length; ++i) {
@@ -92,7 +91,6 @@ export class CorrelationComponent implements OnInit, AfterViewInit {
       });
     }
     this.welllog.addWells(wellsToAdd);
-    const performance2 = performance.now();
     const tops = await this.topsService.getTopsList();
     this.addCorrelation(tops);
     this.welllog.resumeUpdate();
